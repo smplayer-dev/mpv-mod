@@ -113,7 +113,7 @@ const struct vo_driver *const video_out_drivers[] =
 #endif
     &video_out_lavc,
 //#ifdef CONFIG_SHAREDBUFFER
-    &video_out_sharedbuffer,
+//    &video_out_sharedbuffer,
 //#endif
     NULL
 };

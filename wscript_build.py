@@ -520,6 +520,7 @@ def build(ctx):
         ( "video/out/win32/droptarget.c",        "win32-desktop" ),
         ( "video/out/win_state.c"),
         ( "video/out/x11_common.c",              "x11" ),
+        ( "video/out/vo_sharedbuffer.m"),
         ( "video/repack.c" ),
         ( "video/sws_utils.c" ),
         ( "video/zimg.c",                        "zimg" ),

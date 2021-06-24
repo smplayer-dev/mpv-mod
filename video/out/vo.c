@@ -65,6 +65,7 @@ extern const struct vo_driver video_out_wlshm;
 extern const struct vo_driver video_out_rpi;
 extern const struct vo_driver video_out_tct;
 extern const struct vo_driver video_out_sixel;
+extern const struct vo_driver video_out_sharedbuffer;
 
 const struct vo_driver *const video_out_drivers[] =
 {
@@ -111,6 +112,9 @@ const struct vo_driver *const video_out_drivers[] =
     &video_out_sixel,
 #endif
     &video_out_lavc,
+//#ifdef CONFIG_SHAREDBUFFER
+    &video_out_sharedbuffer,
+//#endif
     NULL
 };
 

@@ -25,9 +25,68 @@
 #include "vo.h"
 #include "video/mp_image.h"
 
+// Shared memory
+#define DEFAULT_BUFFER_NAME "mpv"
+static char * buffer_name;
+static int shm_fd = 0;
+
+// Image
+static unsigned char * image_data;
+
+static uint32_t image_width;
+static uint32_t image_height;
+static uint32_t image_bytes;
+static uint32_t image_stride;
+static uint32_t image_format;
+static uint32_t frame_count = 0;
+static uint32_t buffer_size = 0;
+static uint32_t video_buffer_size = 0;
+
+struct header_t {
+	uint32_t header_size;
+	uint32_t video_buffer_size;
+	uint32_t width;
+	uint32_t height;
+	uint32_t bytes;
+	uint32_t stride;
+	uint32_t planes;
+	uint32_t format;
+	uint32_t frame_count;
+	uint32_t busy;
+	float fps;
+} * header;
+
 static int reconfig(struct vo *vo, struct mp_image_params *params)
 {
-    MP_INFO(vo, "reconfig \n");
+    MP_INFO(vo, "reconfig w: %d h: %d format: %d \n", params->w, params->h, params->imgfmt);
+
+	image_width = params->w;
+	image_height = params->h;
+	image_format = params->imgfmt;
+
+	switch (image_format)
+	{
+		case IMGFMT_RGB24:
+			image_bytes = 3;
+			break;
+		case IMGFMT_RGB565:
+			image_bytes = 2;
+			break;
+		case IMGFMT_420P:
+			image_bytes = 1;
+			break;
+		case IMGFMT_NV12:
+		case IMGFMT_UYVY:
+			image_bytes = 2;
+			break;
+		default:
+			image_bytes = 3;
+	}
+	image_stride = image_width * image_bytes;
+	video_buffer_size = image_stride * image_height;
+	if (image_format == IMGFMT_420P) {
+		video_buffer_size = image_width * image_height * 2;
+	}
 
     return 0;
 }
@@ -50,6 +109,7 @@ static void uninit(struct vo *vo)
 static int preinit(struct vo *vo)
 {
     MP_INFO(vo, "preinit \n");
+	buffer_name = DEFAULT_BUFFER_NAME;
     return 0;
 }
 

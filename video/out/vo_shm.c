@@ -105,7 +105,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 	if (shm_fd == -1)
 	{
 		MP_FATAL(vo, "failed to open shared memory. Error: %s\n", strerror(errno));
-		return 1;
+		return -1;
 	}
 
 	buffer_size = sizeof(header) + video_buffer_size;
@@ -115,7 +115,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 		MP_FATAL(vo, "failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
 		close(shm_fd);
 		shm_unlink(buffer_name);
-		return 1;
+		return -1;
 	}
 
 	header = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
@@ -140,6 +140,32 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 static void draw_image(struct vo *vo, mp_image_t *mpi)
 {
     //MP_INFO(vo, "draw_image \n");
+
+	header->width = image_width;
+	header->height = image_height;
+	header->bytes = image_bytes;
+	header->stride = image_stride;
+	header->planes = mpi->num_planes;
+	header->format = image_format;
+	header->frame_count = frame_count++;
+	header->fps = mpi->nominal_fps;
+
+	//MP_INFO(vo, "w: %d h: %d stride: %d fps: %f\n", mpi->w, mpi->h, mpi->stride[0], mpi->nominal_fps);
+
+	header->busy = 1;
+	if (image_format == IMGFMT_420P) {
+		unsigned char * ptr = image_data;
+		int size = image_stride * image_height;
+		memcpy_pic(ptr, mpi->planes[0], image_width, image_height, image_stride, mpi->stride[0]);
+		ptr += size;
+		size = (image_width * image_height) / 2;
+		memcpy_pic(ptr, mpi->planes[1], image_width / 2, image_height / 2, image_width / 2, mpi->stride[1]);
+		ptr += size;
+		memcpy_pic(ptr, mpi->planes[2], image_width / 2, image_height / 2, image_width / 2, mpi->stride[2]);
+	} else {
+		memcpy_pic(image_data, mpi->planes[0], image_width * image_bytes, image_height, image_stride, mpi->stride[0]);
+	}
+	header->busy = 0;
 }
 
 static void flip_page(struct vo *vo)

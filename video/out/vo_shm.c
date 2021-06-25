@@ -27,33 +27,41 @@
 
 static int reconfig(struct vo *vo, struct mp_image_params *params)
 {
+    MP_INFO(vo, "reconfig \n");
+
     return 0;
 }
 
 static void draw_image(struct vo *vo, mp_image_t *mpi)
 {
+    //MP_INFO(vo, "draw_image \n");
 }
 
 static void flip_page(struct vo *vo)
 {
+    //MP_INFO(vo, "flip_page \n");
 }
 
 static void uninit(struct vo *vo)
 {
+    MP_INFO(vo, "uninit \n");
 }
 
 static int preinit(struct vo *vo)
 {
+    MP_INFO(vo, "preinit \n");
     return 0;
 }
 
 static int query_format(struct vo *vo, int format)
 {
+    //MP_INFO(vo, "query_format: %d \n", format);
     return format == IMGFMT_BGR24;
 }
 
 static int control(struct vo *vo, uint32_t request, void *data)
 {
+    //MP_INFO(vo, "control \n");
     switch (request) {
     }
     return VO_NOTIMPL;

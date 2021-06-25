@@ -25,6 +25,12 @@
 #include "vo.h"
 #include "video/mp_image.h"
 
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+
 // Shared memory
 #define DEFAULT_BUFFER_NAME "mpv"
 static char * buffer_name;
@@ -88,6 +94,46 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 		video_buffer_size = image_width * image_height * 2;
 	}
 
+	MP_INFO(vo, "w: %d h: %d format: %d\n", image_width, image_height, image_format);
+	MP_INFO(vo, "stride: %d bytes: %d\n", image_stride, image_bytes);
+	MP_INFO(vo, "video buffer size: %d\n", video_buffer_size);
+
+	MP_INFO(vo, "writing output to a shared buffer named \"%s\"\n", buffer_name);
+
+	// Create shared memory
+	shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+	if (shm_fd == -1)
+	{
+		MP_FATAL(vo, "failed to open shared memory. Error: %s\n", strerror(errno));
+		return 1;
+	}
+
+	buffer_size = sizeof(header) + video_buffer_size;
+
+	if (ftruncate(shm_fd, buffer_size) == -1)
+	{
+		MP_FATAL(vo, "failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
+		close(shm_fd);
+		shm_unlink(buffer_name);
+		return 1;
+	}
+
+	header = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+	close(shm_fd);
+
+	if (header == MAP_FAILED)
+	{
+		MP_FATAL(vo, "failed to map shared memory. Error: %s\n", strerror(errno));
+		shm_unlink(buffer_name);
+		return 1;
+	}
+
+	header->header_size = sizeof(struct header_t);
+	header->video_buffer_size = video_buffer_size;
+
+	image_data = (unsigned char*) header + header->header_size;
+	MP_INFO(vo, "header: %p image_data: %p\n", header, image_data);
+
     return 0;
 }
 
@@ -116,7 +162,17 @@ static int preinit(struct vo *vo)
 static int query_format(struct vo *vo, int format)
 {
     //MP_INFO(vo, "query_format: %d \n", format);
-    return format == IMGFMT_BGR24;
+    switch(format)
+	{
+		case IMGFMT_420P:
+		case IMGFMT_NV12:
+		case IMGFMT_UYVY:
+		case IMGFMT_RGB24:
+		case IMGFMT_RGB565:
+			return 1;
+    }
+
+    return 0;
 }
 
 static int control(struct vo *vo, uint32_t request, void *data)

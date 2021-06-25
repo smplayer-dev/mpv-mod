@@ -25,6 +25,8 @@
 #include "vo.h"
 #include "video/mp_image.h"
 #include "sub/osd.h"
+//#include "options/options.h"
+//#include "options/m_option.h"
 
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -62,6 +64,11 @@ struct header_t {
 	uint32_t busy;
 	float fps;
 } * header;
+
+
+struct priv {
+	char * buffer_name;
+};
 
 static void free_file_specific(struct vo *vo)
 {
@@ -212,7 +219,13 @@ static void uninit(struct vo *vo)
 static int preinit(struct vo *vo)
 {
     MP_INFO(vo, "preinit \n");
-	buffer_name = DEFAULT_BUFFER_NAME;
+	struct priv * p = vo->priv;
+	MP_INFO(vo, "preinit: buffer_name: %s \n", p->buffer_name);
+	if (p->buffer_name) {
+		buffer_name = strdup( p->buffer_name);
+	} else {
+		buffer_name = DEFAULT_BUFFER_NAME;
+	}
     return 0;
 }
 
@@ -238,6 +251,8 @@ static int control(struct vo *vo, uint32_t request, void *data)
     return VO_NOTIMPL;
 }
 
+#define OPT_BASE_STRUCT struct priv
+
 const struct vo_driver video_out_shm = {
     .name = "shm",
     .description = "shm",
@@ -248,5 +263,10 @@ const struct vo_driver video_out_shm = {
     .draw_image = draw_image,
     .flip_page = flip_page,
     .uninit = uninit,
-    .priv_size = 0,
+    .priv_size = sizeof(struct priv),
+    .options = (const struct m_option[]) {
+       {"buffer-name", OPT_STRING(buffer_name)},
+       {0}
+    },
+    .options_prefix = "shm",
 };

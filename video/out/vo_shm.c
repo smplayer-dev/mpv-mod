@@ -184,6 +184,14 @@ static void flip_page(struct vo *vo)
 static void uninit(struct vo *vo)
 {
     MP_INFO(vo, "uninit \n");
+
+	if (munmap(header, buffer_size) == -1) {
+		MP_INFO(vo, "uninit: munmap failed. Error: %s\n", strerror(errno));
+	}
+
+	if (shm_unlink(buffer_name) == -1) {
+		MP_INFO(vo, "uninit: shm_unlink failed. Error: %s\n", strerror(errno));
+	}
 }
 
 static int preinit(struct vo *vo)

@@ -66,6 +66,7 @@ extern const struct vo_driver video_out_rpi;
 extern const struct vo_driver video_out_tct;
 extern const struct vo_driver video_out_sixel;
 extern const struct vo_driver video_out_sharedbuffer;
+extern const struct vo_driver video_out_shm;
 
 const struct vo_driver *const video_out_drivers[] =
 {
@@ -115,6 +116,7 @@ const struct vo_driver *const video_out_drivers[] =
 //#ifdef CONFIG_SHAREDBUFFER
 //    &video_out_sharedbuffer,
 //#endif
+    &video_out_shm,
     NULL
 };
 

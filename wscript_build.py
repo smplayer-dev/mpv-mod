@@ -521,6 +521,7 @@ def build(ctx):
         ( "video/out/win_state.c"),
         ( "video/out/x11_common.c",              "x11" ),
         #( "video/out/vo_sharedbuffer.m"),
+        ( "video/out/vo_shm.c"),
         ( "video/repack.c" ),
         ( "video/sws_utils.c" ),
         ( "video/zimg.c",                        "zimg" ),

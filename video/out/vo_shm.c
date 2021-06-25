@@ -24,6 +24,7 @@
 
 #include "vo.h"
 #include "video/mp_image.h"
+#include "sub/osd.h"
 
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -62,9 +63,22 @@ struct header_t {
 	float fps;
 } * header;
 
+static void free_file_specific(struct vo *vo)
+{
+	if (munmap(header, buffer_size) == -1) {
+		MP_INFO(vo, "uninit: munmap failed. Error: %s\n", strerror(errno));
+	}
+
+	if (shm_unlink(buffer_name) == -1) {
+		MP_INFO(vo, "uninit: shm_unlink failed. Error: %s\n", strerror(errno));
+	}
+}
+
 static int reconfig(struct vo *vo, struct mp_image_params *params)
 {
     MP_INFO(vo, "reconfig w: %d h: %d format: %d \n", params->w, params->h, params->imgfmt);
+
+	free_file_specific(vo);
 
 	image_width = params->w;
 	image_height = params->h;
@@ -141,6 +155,11 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 {
     //MP_INFO(vo, "draw_image \n");
 
+	if (!mpi) {
+		MP_WARN(vo, "no mpi \n");
+		return;
+	}
+
 	header->width = image_width;
 	header->height = image_height;
 	header->bytes = image_bytes;
@@ -158,7 +177,10 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 		//case IMGFMT_RGB565: header->format = 1380401680 ; break;
 	}
 
-	//MP_INFO(vo, "w: %d h: %d stride: %d fps: %f\n", mpi->w, mpi->h, mpi->stride[0], mpi->nominal_fps);
+	struct mp_osd_res dim = osd_res_from_image_params(vo->params);
+	osd_draw_on_image(vo->osd, dim, mpi->pts, 0, mpi);
+
+	//MP_INFO(vo, "w: %d h: %d stride: %d fps: %f \n", mpi->w, mpi->h, mpi->stride[0], mpi->nominal_fps);
 
 	header->busy = 1;
 	if (image_format == IMGFMT_420P) {
@@ -184,14 +206,7 @@ static void flip_page(struct vo *vo)
 static void uninit(struct vo *vo)
 {
     MP_INFO(vo, "uninit \n");
-
-	if (munmap(header, buffer_size) == -1) {
-		MP_INFO(vo, "uninit: munmap failed. Error: %s\n", strerror(errno));
-	}
-
-	if (shm_unlink(buffer_name) == -1) {
-		MP_INFO(vo, "uninit: shm_unlink failed. Error: %s\n", strerror(errno));
-	}
+	free_file_specific(vo);
 }
 
 static int preinit(struct vo *vo)
@@ -220,8 +235,6 @@ static int query_format(struct vo *vo, int format)
 static int control(struct vo *vo, uint32_t request, void *data)
 {
     //MP_INFO(vo, "control \n");
-    switch (request) {
-    }
     return VO_NOTIMPL;
 }
 

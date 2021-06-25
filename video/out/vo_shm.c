@@ -36,7 +36,7 @@
 
 // Shared memory
 #define DEFAULT_BUFFER_NAME "mpv"
-static char * buffer_name;
+//static char * buffer_name;
 static int shm_fd = 0;
 
 // Image
@@ -72,11 +72,13 @@ struct priv {
 
 static void free_file_specific(struct vo *vo)
 {
+	struct priv * p = vo->priv;
+
 	if (munmap(header, buffer_size) == -1) {
 		MP_INFO(vo, "uninit: munmap failed. Error: %s\n", strerror(errno));
 	}
 
-	if (shm_unlink(buffer_name) == -1) {
+	if (shm_unlink(p->buffer_name) == -1) {
 		MP_INFO(vo, "uninit: shm_unlink failed. Error: %s\n", strerror(errno));
 	}
 }
@@ -86,6 +88,8 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
     MP_INFO(vo, "reconfig w: %d h: %d format: %d \n", params->w, params->h, params->imgfmt);
 
 	free_file_specific(vo);
+
+	struct priv * p = vo->priv;
 
 	image_width = params->w;
 	image_height = params->h;
@@ -119,10 +123,10 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 	MP_INFO(vo, "stride: %d bytes: %d\n", image_stride, image_bytes);
 	MP_INFO(vo, "video buffer size: %d\n", video_buffer_size);
 
-	MP_INFO(vo, "writing output to a shared buffer named \"%s\"\n", buffer_name);
+	MP_INFO(vo, "writing output to a shared buffer named \"%s\"\n", p->buffer_name);
 
 	// Create shared memory
-	shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+	shm_fd = shm_open(p->buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 	if (shm_fd == -1)
 	{
 		MP_FATAL(vo, "failed to open shared memory. Error: %s\n", strerror(errno));
@@ -135,7 +139,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 	{
 		MP_FATAL(vo, "failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
 		close(shm_fd);
-		shm_unlink(buffer_name);
+		shm_unlink(p->buffer_name);
 		return -1;
 	}
 
@@ -145,7 +149,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 	if (header == MAP_FAILED)
 	{
 		MP_FATAL(vo, "failed to map shared memory. Error: %s\n", strerror(errno));
-		shm_unlink(buffer_name);
+		shm_unlink(p->buffer_name);
 		return 1;
 	}
 
@@ -221,11 +225,13 @@ static int preinit(struct vo *vo)
     MP_INFO(vo, "preinit \n");
 	struct priv * p = vo->priv;
 	MP_INFO(vo, "preinit: buffer_name: %s \n", p->buffer_name);
+	/*
 	if (p->buffer_name) {
 		buffer_name = strdup( p->buffer_name);
 	} else {
 		buffer_name = DEFAULT_BUFFER_NAME;
 	}
+	*/
     return 0;
 }
 
@@ -267,6 +273,9 @@ const struct vo_driver video_out_shm = {
     .options = (const struct m_option[]) {
        {"buffer-name", OPT_STRING(buffer_name)},
        {0}
+    },
+    .priv_defaults = &(const struct priv) {
+        .buffer_name = "mpv",
     },
     .options_prefix = "shm",
 };

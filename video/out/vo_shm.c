@@ -150,6 +150,14 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 	header->frame_count = frame_count++;
 	header->fps = mpi->nominal_fps;
 
+	switch (image_format) {
+		case IMGFMT_420P: header->format = 808596553; break;
+		case IMGFMT_UYVY: header->format = 1498831189; break;
+		//case IMGFMT_NV12: header->format = 844715353; break;
+		case IMGFMT_RGB24: header->format = 1380401688; break;
+		//case IMGFMT_RGB565: header->format = 1380401680 ; break;
+	}
+
 	//MP_INFO(vo, "w: %d h: %d stride: %d fps: %f\n", mpi->w, mpi->h, mpi->stride[0], mpi->nominal_fps);
 
 	header->busy = 1;
@@ -191,10 +199,10 @@ static int query_format(struct vo *vo, int format)
     switch(format)
 	{
 		case IMGFMT_420P:
-		case IMGFMT_NV12:
+		//case IMGFMT_NV12:
 		case IMGFMT_UYVY:
 		case IMGFMT_RGB24:
-		case IMGFMT_RGB565:
+		//case IMGFMT_RGB565:
 			return 1;
     }
 

@@ -29,6 +29,7 @@
 #include "vo_sharedbuffer.h"
 #include "vo.h"
 #include "video/mp_image.h"
+#include "sub/osd.h"
 
 /*
 #include "m_option.h"
@@ -110,6 +111,8 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
     //MP_INFO(vo, "draw_image \n");
 
     struct priv *p = vo->priv;
+	struct mp_osd_res dim = osd_res_from_image_params(vo->params);
+	osd_draw_on_image(vo->osd, dim, mpi->pts, 0, mpi);
     memcpy_pic(p->image_data, mpi->planes[0],
                p->image_width * p->image_bytes, p->image_height,
                p->image_stride, mpi->stride[0]);

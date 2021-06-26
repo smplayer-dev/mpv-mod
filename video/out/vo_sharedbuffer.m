@@ -46,9 +46,12 @@
 struct priv {
     char *buffer_name;
     unsigned char *image_data;
-    unsigned int image_bytespp;
-    unsigned int image_width;
-    unsigned int image_height;
+    uint32_t image_bytes;
+    uint32_t image_width;
+    uint32_t image_height;
+    uint32_t image_format;
+    uint32_t image_stride;
+    uint32_t buffer_size;
 
 	/*
     void (*vo_draw_alpha_fnc)(int w, int h, unsigned char* src,
@@ -74,11 +77,13 @@ static void draw_alpha(void *ctx, int x0, int y0, int w, int h,
 }
 */
 
+/*
 static unsigned int image_bytes(struct priv *p)
 {
     printf("w: %d h: %d bytes: %d \n", p->image_width, p->image_height,  p->image_bytespp);
     return p->image_width * p->image_height * p->image_bytespp;
 }
+*/
 
 static int preinit(struct vo *vo)
 {
@@ -106,8 +111,8 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 
     struct priv *p = vo->priv;
     memcpy_pic(p->image_data, mpi->planes[0],
-               (p->image_width) * (p->image_bytespp), p->image_height,
-               (p->image_width) * (p->image_bytespp), mpi->stride[0]);
+               p->image_width * p->image_bytes, p->image_height,
+               p->image_stride, mpi->stride[0]);
 }
 
 /*
@@ -126,7 +131,7 @@ static void free_buffers(struct vo *vo)
     p->mposx_proxy = nil;
 
     if (p->image_data) {
-        if (munmap(p->image_data, image_bytes(p)) == -1) {
+        if (munmap(p->image_data, p->buffer_size) == -1) {
             MP_FATAL(vo, "uninit: munmap failed. Error: %s\n", strerror(errno));
         }
         if (shm_unlink(p->buffer_name) == -1) {
@@ -151,6 +156,28 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 
     p->image_width = params->w;
     p->image_height = params->h;
+	p->image_format = params->imgfmt;
+
+	switch (p->image_format)
+	{
+		case IMGFMT_RGB24:
+			p->image_bytes = 3;
+			break;
+		case IMGFMT_RGB565:
+			p->image_bytes = 2;
+			break;
+		case IMGFMT_420P:
+			p->image_bytes = 1;
+			break;
+		case IMGFMT_NV12:
+		case IMGFMT_UYVY:
+			p->image_bytes = 2;
+			break;
+		default:
+			p->image_bytes = 3;
+	}
+	p->image_stride = p->image_width * p->image_bytes;
+	p->buffer_size = p->image_stride * p->image_height;
 
     MP_INFO(vo, "writing output to a shared buffer named \"%s\"\n", p->buffer_name);
 
@@ -162,15 +189,15 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
     }
 
     MP_INFO(vo, "dw: %d dh: %d\n", vo->dwidth, vo->dheight);
-    MP_INFO(vo, "w: %d h: %d bytespp: %d image_bytes: %d\n", p->image_width, p->image_height, p->image_bytespp, image_bytes(p));
+    MP_INFO(vo, "w: %d h: %d bytes: %d buffer size: %d\n", p->image_width, p->image_height, p->image_bytes, p->buffer_size);
 
-    if (ftruncate(shm_fd, image_bytes(p)) == -1) {
+    if (ftruncate(shm_fd, p->buffer_size) == -1) {
         close(shm_fd);
         shm_unlink(p->buffer_name);
         goto err_out;
     }
 
-    p->image_data = mmap(NULL, image_bytes(p),
+    p->image_data = mmap(NULL, p->buffer_size,
         PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     close(shm_fd);
 
@@ -190,7 +217,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
         p->mposx_proto = (id <MPlayerOSXVOProto>)p->mposx_proxy;
         [p->mposx_proto startWithWidth:p->image_width
                             withHeight:p->image_height
-                             withBytes:p->image_bytespp
+                             withBytes:p->image_bytes
                             withAspect:vo->dwidth*100/vo->dheight];
     } else {
         MP_ERR(vo, "distributed object doesn't conform to the correct protocol.\n");
@@ -210,46 +237,15 @@ static int query_format(struct vo *vo, int format)
 {
     //MP_INFO(vo, "query_format: %d \n", format);
 
-    struct priv *p = vo->priv;
-    unsigned int image_depth = 0;
     switch (format) {
-	/*
-    case IMGFMT_YUY2:
-        p->vo_draw_alpha_fnc = vo_draw_alpha_yuy2;
-        image_depth = 16;
-        goto supported;
-	*/
-	/*
+    //case IMGFMT_YUY2:
     case IMGFMT_UYVY:
-        //p->vo_draw_alpha_fnc = vo_draw_alpha_yuy2;
-        image_depth = 16;
-        goto supported;
-	*/
     case IMGFMT_RGB24:
-        //p->vo_draw_alpha_fnc = vo_draw_alpha_rgb24;
-        image_depth = 24;
-        goto supported;
-	/*
-    case IMGFMT_ARGB:
-        p->vo_draw_alpha_fnc = vo_draw_alpha_rgb32;
-        image_depth = 32;
-        goto supported;
-    case IMGFMT_BGRA:
-        p->vo_draw_alpha_fnc = vo_draw_alpha_rgb32;
-        image_depth = 32;
-        goto supported;
-	*/
+    //case IMGFMT_ARGB:
+    //case IMGFMT_BGRA:
+        return 1;
     }
     return 0;
-
-supported:
-    p->image_bytespp = (image_depth + 7) / 8;
-	return 1;
-/*
-    return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW |
-        VFCAP_OSD | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN |
-        VOCAP_NOSLICES;
-*/
 }
 
 static void uninit(struct vo *vo)
@@ -262,23 +258,21 @@ static int control(struct vo *vo, uint32_t request, void *data)
 {
     //MP_INFO(vo, "control: request: %d \n", request);
 
+	/*
     struct priv *p = vo->priv;
     switch (request) {
-		/*
         case VOCTRL_DRAW_IMAGE:
             return draw_image(vo, data);
-		*/
-        case 40000://VOCTRL_FULLSCREEN:
+        case VOCTRL_FULLSCREEN:
             [p->mposx_proto toggleFullscreen];
             return VO_TRUE;
-		/*
         case VOCTRL_QUERY_FORMAT:
             return query_format(vo, *(uint32_t*)data);
-		*/
-        case 40001://VOCTRL_ONTOP:
+        case VOCTRL_ONTOP:
             [p->mposx_proto ontop];
             return VO_TRUE;
     }
+	*/
     return VO_NOTIMPL;
 }
 

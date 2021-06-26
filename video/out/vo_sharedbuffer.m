@@ -216,7 +216,7 @@ static int control(struct vo *vo, uint32_t request, void *data)
 #define OPT_BASE_STRUCT struct priv
 
 const struct vo_driver video_out_sharedbuffer = {
-    .name = "sharedbuffer",
+    .name = "cocoashm",
     .description = "Mac OS X Shared Buffer (headless video output for GUIs)",
     .preinit = preinit,
     .reconfig = reconfig,
@@ -233,5 +233,5 @@ const struct vo_driver video_out_sharedbuffer = {
     .priv_defaults = &(const struct priv) {
         .buffer_name = "mpv",
     },
-    .options_prefix = "shm",
+    .options_prefix = "cocoashm",
 };

@@ -36,7 +36,6 @@
 
 // Shared memory
 #define DEFAULT_BUFFER_NAME "mpv"
-//static char * buffer_name;
 static int shm_fd = 0;
 
 // Image
@@ -261,7 +260,7 @@ static int control(struct vo *vo, uint32_t request, void *data)
 
 const struct vo_driver video_out_shm = {
     .name = "shm",
-    .description = "shm",
+    .description = "Shared buffer",
     .preinit = preinit,
     .query_format = query_format,
     .reconfig = reconfig,

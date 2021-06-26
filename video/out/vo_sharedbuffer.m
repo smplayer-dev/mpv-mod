@@ -23,10 +23,12 @@
  * coordination with the GUIs using Distributed Objects.
  */
 
-#include <sys/mman.h>
+
+//#include <sys/mman.h>
 
 #include "vo_sharedbuffer.h"
-#include "video_out.h"
+#include "vo.h"
+/*
 #include "m_option.h"
 #include "talloc.h"
 
@@ -36,6 +38,7 @@
 
 #include "sub/sub.h"
 #include "osd.h"
+*/
 
 // declarations
 struct priv {
@@ -53,6 +56,7 @@ struct priv {
     id <MPlayerOSXVOProto> mposx_proto;
 };
 
+#if 0
 // implementation
 static void draw_alpha(void *ctx, int x0, int y0, int w, int h,
                             unsigned char *src, unsigned char *srca,
@@ -243,10 +247,13 @@ static int control(struct vo *vo, uint32_t request, void *data)
     return VO_NOTIMPL;
 }
 
+#endif
+
 #undef OPT_BASE_STRUCT
 #define OPT_BASE_STRUCT struct priv
 
 const struct vo_driver video_out_sharedbuffer = {
+	/*
     .is_new = true,
     .info = &(const vo_info_t) {
         "Mac OS X Shared Buffer (headless video output for GUIs)",
@@ -266,4 +273,5 @@ const struct vo_driver video_out_sharedbuffer = {
         OPT_STRING("buffer_name", buffer_name, 0, OPTDEF_STR("mplayerosx")),
         {NULL},
     },
+	*/
 };

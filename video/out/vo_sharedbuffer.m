@@ -90,7 +90,7 @@ static int preinit(struct vo *vo)
 
 static void flip_page(struct vo *vo)
 {
-    MP_INFO(vo, "flip_page \n");
+    //MP_INFO(vo, "flip_page \n");
 
     struct priv *p = vo->priv;
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
@@ -100,9 +100,9 @@ static void flip_page(struct vo *vo)
 
 //static void check_events(struct vo *vo) { }
 
-static uint32_t draw_image(struct vo *vo, mp_image_t *mpi)
+static void draw_image(struct vo *vo, mp_image_t *mpi)
 {
-    MP_INFO(vo, "draw_image \n");
+    //MP_INFO(vo, "draw_image \n");
 
 /*
     struct priv *p = vo->priv;
@@ -110,7 +110,7 @@ static uint32_t draw_image(struct vo *vo, mp_image_t *mpi)
                (p->image_width) * (p->image_bytespp), p->image_height,
                (p->image_width) * (p->image_bytespp), mpi->stride[0]);
 */
-    return 0;
+//    return 0;
 }
 
 /*
@@ -164,8 +164,10 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
         goto err_out;
     }
 
+    MP_INFO(vo, "dw: %d dh: %d\n", vo->dwidth, vo->dheight);
+    MP_INFO(vo, "w: %d h: %d bytespp: %d image_bytes: %d\n", p->image_width, p->image_height, p->image_bytespp, image_bytes(p));
+
     if (ftruncate(shm_fd, image_bytes(p)) == -1) {
-        MP_FATAL(vo, "failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
         close(shm_fd);
         shm_unlink(p->buffer_name);
         goto err_out;
@@ -192,8 +194,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
         [p->mposx_proto startWithWidth:p->image_width
                             withHeight:p->image_height
                              withBytes:p->image_bytespp
-                            //withAspect:d_width*100/d_height];
-                            withAspect:p->image_width * 100 / p->image_height];
+                            withAspect:vo->dwidth*100/vo->dheight];
     } else {
         MP_ERR(vo, "distributed object doesn't conform to the correct protocol.\n");
         [p->mposx_proxy release];
@@ -250,30 +251,31 @@ supported:
 
 static void uninit(struct vo *vo)
 {
-return;
     struct priv *p = vo->priv;
     free_buffers(vo);
 }
 
 static int control(struct vo *vo, uint32_t request, void *data)
 {
-    MP_INFO(vo, "control: request: %d \n", request);
+    //MP_INFO(vo, "control: request: %d \n", request);
 
-	/*
     struct priv *p = vo->priv;
     switch (request) {
+		/*
         case VOCTRL_DRAW_IMAGE:
             return draw_image(vo, data);
-        case VOCTRL_FULLSCREEN:
+		*/
+        case 40000://VOCTRL_FULLSCREEN:
             [p->mposx_proto toggleFullscreen];
             return VO_TRUE;
+		/*
         case VOCTRL_QUERY_FORMAT:
             return query_format(vo, *(uint32_t*)data);
-        case VOCTRL_ONTOP:
+		*/
+        case 40001://VOCTRL_ONTOP:
             [p->mposx_proto ontop];
             return VO_TRUE;
     }
-	*/
     return VO_NOTIMPL;
 }
 
@@ -289,6 +291,7 @@ const struct vo_driver video_out_sharedbuffer = {
     .control = control,
     .flip_page = flip_page,
     .query_format = query_format,
+    .draw_image = draw_image,
     //.check_events = check_events,
     .uninit = uninit,
     //.draw_osd = draw_osd,

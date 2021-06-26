@@ -24,7 +24,7 @@ jobs:
         run: |
             mkdir release
             cp -r build/mpv.app release
-            create-dmg --sandbox-safe --no-internet-enable --volname "mpv" --app-drop-link 200 185 mpv.dmg release
+            #create-dmg --sandbox-safe --no-internet-enable --volname "mpv" --app-drop-link 200 185 mpv.dmg release
             #rm -rf release/mpv.app
             #mv mpv.dmg release/
 
@@ -33,4 +33,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: mpv
-          path: ./mpv/release/*
+          path: ./release/*

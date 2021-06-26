@@ -24,24 +24,17 @@
  */
 
 
-//#include <sys/mman.h>
-
 #include "vo_sharedbuffer.h"
 #include "vo.h"
 #include "video/mp_image.h"
 #include "sub/osd.h"
 
-/*
-#include "m_option.h"
-#include "talloc.h"
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
 
-#include "libmpcodecs/vfcap.h"
-#include "libmpcodecs/mp_image.h"
-#include "fastmemcpy.h"
-
-#include "sub/sub.h"
-#include "osd.h"
-*/
 
 // declarations
 struct priv {
@@ -54,43 +47,14 @@ struct priv {
     uint32_t image_stride;
     uint32_t buffer_size;
 
-	/*
-    void (*vo_draw_alpha_fnc)(int w, int h, unsigned char* src,
-        unsigned char *srca, int srcstride, unsigned char* dstbase,
-        int dststride);
-	*/
-
     NSDistantObject *mposx_proxy;
     id <MPlayerOSXVOProto> mposx_proto;
 };
 
 
-// implementation
-/*
-static void draw_alpha(void *ctx, int x0, int y0, int w, int h,
-                            unsigned char *src, unsigned char *srca,
-                            int stride)
-{
-    struct priv *p = ((struct vo *) ctx)->priv;
-    p->vo_draw_alpha_fnc(w, h, src, srca, stride,
-        p->image_data + (x0 + y0 * p->image_width) * p->image_bytespp,
-        p->image_width * p->image_bytespp);
-}
-*/
-
-/*
-static unsigned int image_bytes(struct priv *p)
-{
-    printf("w: %d h: %d bytes: %d \n", p->image_width, p->image_height,  p->image_bytespp);
-    return p->image_width * p->image_height * p->image_bytespp;
-}
-*/
-
 static int preinit(struct vo *vo)
 {
     MP_INFO(vo, "preinit \n");
-    struct priv *p = vo->priv;
-    //p->buffer_name = "mpv";
     return 0;
 }
 
@@ -104,8 +68,6 @@ static void flip_page(struct vo *vo)
     [pool release];
 }
 
-//static void check_events(struct vo *vo) { }
-
 static void draw_image(struct vo *vo, mp_image_t *mpi)
 {
     //MP_INFO(vo, "draw_image \n");
@@ -117,13 +79,6 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
                p->image_width * p->image_bytes, p->image_height,
                p->image_stride, mpi->stride[0]);
 }
-
-/*
-static void draw_osd(struct vo *vo, struct osd_state *osd) {
-    struct priv *p = vo->priv;
-    osd_draw_text(osd, p->image_width, p->image_height, draw_alpha, vo);
-}
-*/
 
 static void free_buffers(struct vo *vo)
 {
@@ -142,12 +97,6 @@ static void free_buffers(struct vo *vo)
         }
     }
 }
-
-/*
-static int config(struct vo *vo, uint32_t width, uint32_t height,
-                  uint32_t d_width, uint32_t d_height, uint32_t flags,
-                  uint32_t format)
-*/
 
 static int reconfig(struct vo *vo, struct mp_image_params *params)
 {
@@ -253,29 +202,12 @@ static int query_format(struct vo *vo, int format)
 
 static void uninit(struct vo *vo)
 {
-    struct priv *p = vo->priv;
     free_buffers(vo);
 }
 
 static int control(struct vo *vo, uint32_t request, void *data)
 {
     //MP_INFO(vo, "control: request: %d \n", request);
-
-	/*
-    struct priv *p = vo->priv;
-    switch (request) {
-        case VOCTRL_DRAW_IMAGE:
-            return draw_image(vo, data);
-        case VOCTRL_FULLSCREEN:
-            [p->mposx_proto toggleFullscreen];
-            return VO_TRUE;
-        case VOCTRL_QUERY_FORMAT:
-            return query_format(vo, *(uint32_t*)data);
-        case VOCTRL_ONTOP:
-            [p->mposx_proto ontop];
-            return VO_TRUE;
-    }
-	*/
     return VO_NOTIMPL;
 }
 
@@ -292,16 +224,8 @@ const struct vo_driver video_out_sharedbuffer = {
     .flip_page = flip_page,
     .query_format = query_format,
     .draw_image = draw_image,
-    //.check_events = check_events,
     .uninit = uninit,
-    //.draw_osd = draw_osd,
     .priv_size = sizeof(struct priv),
-	/*
-    .options = (const struct m_option[]) {
-        OPT_STRING("buffer_name", buffer_name, 0, OPTDEF_STR("mplayerosx")),
-        {NULL},
-    },
-	*/
     .options = (const struct m_option[]) {
        {"buffer-name", OPT_STRING(buffer_name)},
        {0}

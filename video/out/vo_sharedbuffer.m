@@ -202,16 +202,18 @@ static int query_format(struct vo *vo, uint32_t format)
 {
     struct priv *p = vo->priv;
     unsigned int image_depth = 0;
-	/*
     switch (format) {
+	/*
     case IMGFMT_YUY2:
         p->vo_draw_alpha_fnc = vo_draw_alpha_yuy2;
         image_depth = 16;
         goto supported;
+	*/
     case IMGFMT_RGB24:
-        p->vo_draw_alpha_fnc = vo_draw_alpha_rgb24;
+        //p->vo_draw_alpha_fnc = vo_draw_alpha_rgb24;
         image_depth = 24;
         goto supported;
+	/*
     case IMGFMT_ARGB:
         p->vo_draw_alpha_fnc = vo_draw_alpha_rgb32;
         image_depth = 32;
@@ -220,13 +222,14 @@ static int query_format(struct vo *vo, uint32_t format)
         p->vo_draw_alpha_fnc = vo_draw_alpha_rgb32;
         image_depth = 32;
         goto supported;
-    }
 	*/
+    }
     return 0;
 
-/*
 supported:
     p->image_bytespp = (image_depth + 7) / 8;
+	return 1;
+/*
     return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW |
         VFCAP_OSD | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN |
         VOCAP_NOSLICES;

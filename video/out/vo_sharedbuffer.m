@@ -28,6 +28,8 @@
 
 #include "vo_sharedbuffer.h"
 #include "vo.h"
+#include "video/mp_image.h"
+
 /*
 #include "m_option.h"
 #include "talloc.h"
@@ -56,7 +58,7 @@ struct priv {
     id <MPlayerOSXVOProto> mposx_proto;
 };
 
-#if 0
+
 // implementation
 static void draw_alpha(void *ctx, int x0, int y0, int w, int h,
                             unsigned char *src, unsigned char *srca,
@@ -73,7 +75,7 @@ static unsigned int image_bytes(struct priv *p)
     return p->image_width * p->image_height * p->image_bytespp;
 }
 
-static int preinit(struct vo *vo, const char *arg)
+static int preinit(struct vo *vo)
 {
     return 0;
 }
@@ -97,10 +99,12 @@ static uint32_t draw_image(struct vo *vo, mp_image_t *mpi)
     return 0;
 }
 
+/*
 static void draw_osd(struct vo *vo, struct osd_state *osd) {
     struct priv *p = vo->priv;
     osd_draw_text(osd, p->image_width, p->image_height, draw_alpha, vo);
 }
+*/
 
 static void free_buffers(struct priv *p)
 {
@@ -110,13 +114,14 @@ static void free_buffers(struct priv *p)
     p->mposx_proxy = nil;
 
     if (p->image_data) {
-        if (munmap(p->image_data, image_bytes(p)) == -1)
-            mp_msg(MSGT_VO, MSGL_FATAL, "[vo_sharedbuffer] uninit: munmap "
-                                        "failed. Error: %s\n", strerror(errno));
-
-        if (shm_unlink(p->buffer_name) == -1)
-            mp_msg(MSGT_VO, MSGL_FATAL, "[vo_sharedbuffer] uninit: shm_unlink "
-                                        "failed. Error: %s\n", strerror(errno));
+        if (munmap(p->image_data, image_bytes(p)) == -1) {
+            //mp_msg(MSGT_VO, MSGL_FATAL, "[vo_sharedbuffer] uninit: munmap "
+            //                            "failed. Error: %s\n", strerror(errno));
+        }
+        if (shm_unlink(p->buffer_name) == -1) {
+            //mp_msg(MSGT_VO, MSGL_FATAL, "[vo_sharedbuffer] uninit: shm_unlink "
+            //                            "failed. Error: %s\n", strerror(errno));
+        }
     }
 }
 
@@ -124,6 +129,7 @@ static int config(struct vo *vo, uint32_t width, uint32_t height,
                   uint32_t d_width, uint32_t d_height, uint32_t flags,
                   uint32_t format)
 {
+#if 0
     struct priv *p = vo->priv;
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
     free_buffers(p);
@@ -189,6 +195,7 @@ static int config(struct vo *vo, uint32_t width, uint32_t height,
     return 0;
 err_out:
     [pool release];
+#endif
     return 1;
 }
 
@@ -196,6 +203,7 @@ static int query_format(struct vo *vo, uint32_t format)
 {
     struct priv *p = vo->priv;
     unsigned int image_depth = 0;
+	/*
     switch (format) {
     case IMGFMT_YUY2:
         p->vo_draw_alpha_fnc = vo_draw_alpha_yuy2;
@@ -214,13 +222,16 @@ static int query_format(struct vo *vo, uint32_t format)
         image_depth = 32;
         goto supported;
     }
+	*/
     return 0;
 
+/*
 supported:
     p->image_bytespp = (image_depth + 7) / 8;
     return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW |
         VFCAP_OSD | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN |
         VOCAP_NOSLICES;
+*/
 }
 
 static void uninit(struct vo *vo)
@@ -232,6 +243,7 @@ static void uninit(struct vo *vo)
 static int control(struct vo *vo, uint32_t request, void *data)
 {
     struct priv *p = vo->priv;
+	/*
     switch (request) {
         case VOCTRL_DRAW_IMAGE:
             return draw_image(vo, data);
@@ -244,31 +256,26 @@ static int control(struct vo *vo, uint32_t request, void *data)
             [p->mposx_proto ontop];
             return VO_TRUE;
     }
+	*/
     return VO_NOTIMPL;
 }
 
-#endif
 
 #undef OPT_BASE_STRUCT
 #define OPT_BASE_STRUCT struct priv
 
 const struct vo_driver video_out_sharedbuffer = {
-	/*
-    .is_new = true,
-    .info = &(const vo_info_t) {
-        "Mac OS X Shared Buffer (headless video output for GUIs)",
-        "sharedbuffer",
-        "Stefano Pigozzi <stefano.pigozzi@gmail.com> and others.",
-        ""
-    },
+    .name = "sharedbuffer",
+    .description = "Mac OS X Shared Buffer (headless video output for GUIs)",
     .preinit = preinit,
-    .config = config,
+    //.config = config,
     .control = control,
     .flip_page = flip_page,
-    .check_events = check_events,
+    //.check_events = check_events,
     .uninit = uninit,
-    .draw_osd = draw_osd,
+    //.draw_osd = draw_osd,
     .priv_size = sizeof(struct priv),
+	/*
     .options = (const struct m_option[]) {
         OPT_STRING("buffer_name", buffer_name, 0, OPTDEF_STR("mplayerosx")),
         {NULL},

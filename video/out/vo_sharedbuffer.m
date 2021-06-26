@@ -50,9 +50,11 @@ struct priv {
     unsigned int image_width;
     unsigned int image_height;
 
+	/*
     void (*vo_draw_alpha_fnc)(int w, int h, unsigned char* src,
         unsigned char *srca, int srcstride, unsigned char* dstbase,
         int dststride);
+	*/
 
     NSDistantObject *mposx_proxy;
     id <MPlayerOSXVOProto> mposx_proto;
@@ -60,6 +62,7 @@ struct priv {
 
 
 // implementation
+/*
 static void draw_alpha(void *ctx, int x0, int y0, int w, int h,
                             unsigned char *src, unsigned char *srca,
                             int stride)
@@ -69,15 +72,19 @@ static void draw_alpha(void *ctx, int x0, int y0, int w, int h,
         p->image_data + (x0 + y0 * p->image_width) * p->image_bytespp,
         p->image_width * p->image_bytespp);
 }
+*/
 
 static unsigned int image_bytes(struct priv *p)
 {
+    printf("w: %d h: %d bytes: %d \n", p->image_width, p->image_height,  p->image_bytespp);
     return p->image_width * p->image_height * p->image_bytespp;
 }
 
 static int preinit(struct vo *vo)
 {
     MP_INFO(vo, "preinit \n");
+    struct priv *p = vo->priv;
+    p->buffer_name = "mpv";
     return 0;
 }
 
@@ -91,7 +98,7 @@ static void flip_page(struct vo *vo)
     [pool release];
 }
 
-static void check_events(struct vo *vo) { }
+//static void check_events(struct vo *vo) { }
 
 static uint32_t draw_image(struct vo *vo, mp_image_t *mpi)
 {
@@ -186,7 +193,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
                             withHeight:p->image_height
                              withBytes:p->image_bytespp
                             //withAspect:d_width*100/d_height];
-                            withAspect:p->image_width / p->image_height];
+                            withAspect:p->image_width * 100 / p->image_height];
     } else {
         MP_ERR(vo, "distributed object doesn't conform to the correct protocol.\n");
         [p->mposx_proxy release];
@@ -201,8 +208,9 @@ err_out:
     return -1;
 }
 
-static int query_format(struct vo *vo, uint32_t format)
+static int query_format(struct vo *vo, int format)
 {
+    //MP_INFO(vo, "query_format: %d \n", format);
 
     struct priv *p = vo->priv;
     unsigned int image_depth = 0;
@@ -242,16 +250,17 @@ supported:
 
 static void uninit(struct vo *vo)
 {
+return;
     struct priv *p = vo->priv;
     free_buffers(vo);
 }
 
 static int control(struct vo *vo, uint32_t request, void *data)
 {
-    MP_INFO(vo, "control \n");
+    MP_INFO(vo, "control: request: %d \n", request);
 
-    struct priv *p = vo->priv;
 	/*
+    struct priv *p = vo->priv;
     switch (request) {
         case VOCTRL_DRAW_IMAGE:
             return draw_image(vo, data);
@@ -279,6 +288,7 @@ const struct vo_driver video_out_sharedbuffer = {
     .reconfig = reconfig,
     .control = control,
     .flip_page = flip_page,
+    .query_format = query_format,
     //.check_events = check_events,
     .uninit = uninit,
     //.draw_osd = draw_osd,

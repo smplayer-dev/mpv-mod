@@ -113,9 +113,9 @@ const struct vo_driver *const video_out_drivers[] =
     &video_out_sixel,
 #endif
     &video_out_lavc,
-//#ifdef CONFIG_SHAREDBUFFER
+#ifdef HAVE_COCOA
     &video_out_sharedbuffer,
-//#endif
+#endif
     &video_out_shm,
     NULL
 };

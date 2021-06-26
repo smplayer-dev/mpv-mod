@@ -84,7 +84,7 @@ static int preinit(struct vo *vo)
 {
     MP_INFO(vo, "preinit \n");
     struct priv *p = vo->priv;
-    p->buffer_name = "mpv";
+    //p->buffer_name = "mpv";
     return 0;
 }
 
@@ -194,9 +194,9 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
                             withAspect:vo->dwidth*100/vo->dheight];
     } else {
         MP_ERR(vo, "distributed object doesn't conform to the correct protocol.\n");
-        //[p->mposx_proxy release];
-        //p->mposx_proxy = nil;
-        //p->mposx_proto = nil;
+        [p->mposx_proxy release];
+        p->mposx_proxy = nil;
+        p->mposx_proto = nil;
     }
 
     [pool release];
@@ -305,4 +305,12 @@ const struct vo_driver video_out_sharedbuffer = {
         {NULL},
     },
 	*/
+    .options = (const struct m_option[]) {
+       {"buffer-name", OPT_STRING(buffer_name)},
+       {0}
+    },
+    .priv_defaults = &(const struct priv) {
+        .buffer_name = "mpv",
+    },
+    .options_prefix = "shm",
 };

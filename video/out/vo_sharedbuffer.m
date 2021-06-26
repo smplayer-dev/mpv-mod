@@ -104,13 +104,10 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 {
     //MP_INFO(vo, "draw_image \n");
 
-/*
     struct priv *p = vo->priv;
     memcpy_pic(p->image_data, mpi->planes[0],
                (p->image_width) * (p->image_bytespp), p->image_height,
                (p->image_width) * (p->image_bytespp), mpi->stride[0]);
-*/
-//    return 0;
 }
 
 /*
@@ -197,9 +194,9 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
                             withAspect:vo->dwidth*100/vo->dheight];
     } else {
         MP_ERR(vo, "distributed object doesn't conform to the correct protocol.\n");
-        [p->mposx_proxy release];
-        p->mposx_proxy = nil;
-        p->mposx_proto = nil;
+        //[p->mposx_proxy release];
+        //p->mposx_proxy = nil;
+        //p->mposx_proto = nil;
     }
 
     [pool release];
@@ -219,6 +216,12 @@ static int query_format(struct vo *vo, int format)
 	/*
     case IMGFMT_YUY2:
         p->vo_draw_alpha_fnc = vo_draw_alpha_yuy2;
+        image_depth = 16;
+        goto supported;
+	*/
+	/*
+    case IMGFMT_UYVY:
+        //p->vo_draw_alpha_fnc = vo_draw_alpha_yuy2;
         image_depth = 16;
         goto supported;
 	*/

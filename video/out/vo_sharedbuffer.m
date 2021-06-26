@@ -77,11 +77,14 @@ static unsigned int image_bytes(struct priv *p)
 
 static int preinit(struct vo *vo)
 {
+    MP_INFO(vo, "preinit \n");
     return 0;
 }
 
 static void flip_page(struct vo *vo)
 {
+    MP_INFO(vo, "flip_page \n");
+
     struct priv *p = vo->priv;
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
     [p->mposx_proto render];
@@ -92,10 +95,14 @@ static void check_events(struct vo *vo) { }
 
 static uint32_t draw_image(struct vo *vo, mp_image_t *mpi)
 {
+    MP_INFO(vo, "draw_image \n");
+
+/*
     struct priv *p = vo->priv;
     memcpy_pic(p->image_data, mpi->planes[0],
                (p->image_width) * (p->image_bytespp), p->image_height,
                (p->image_width) * (p->image_bytespp), mpi->stride[0]);
+*/
     return 0;
 }
 
@@ -124,34 +131,34 @@ static void free_buffers(struct vo *vo)
     }
 }
 
+/*
 static int config(struct vo *vo, uint32_t width, uint32_t height,
                   uint32_t d_width, uint32_t d_height, uint32_t flags,
                   uint32_t format)
+*/
+
+static int reconfig(struct vo *vo, struct mp_image_params *params)
 {
-#if 0
+    MP_INFO(vo, "reconfig w: %d h: %d format: %d \n", params->w, params->h, params->imgfmt);
+
     struct priv *p = vo->priv;
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
     free_buffers(vo);
 
-    p->image_width = width;
-    p->image_height = height;
+    p->image_width = params->w;
+    p->image_height = params->h;
 
-    mp_msg(MSGT_VO, MSGL_INFO, "[vo_sharedbuffer] writing output to a shared "
-        "buffer named \"%s\"\n", p->buffer_name);
+    MP_INFO(vo, "writing output to a shared buffer named \"%s\"\n", p->buffer_name);
 
     // create shared memory
     int shm_fd = shm_open(p->buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if (shm_fd == -1) {
-        mp_msg(MSGT_VO, MSGL_FATAL,
-            "[vo_sharedbuffer] failed to open shared memory. Error: %s\n",
-            strerror(errno));
+        MP_FATAL(vo, "failed to open shared memory. Error: %s\n", strerror(errno));
         goto err_out;
     }
 
     if (ftruncate(shm_fd, image_bytes(p)) == -1) {
-        mp_msg(MSGT_VO, MSGL_FATAL,
-            "[vo_sharedbuffer] failed to size shared memory, possibly "
-            "already in use. Error: %s\n", strerror(errno));
+        MP_FATAL(vo, "failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
         close(shm_fd);
         shm_unlink(p->buffer_name);
         goto err_out;
@@ -162,9 +169,7 @@ static int config(struct vo *vo, uint32_t width, uint32_t height,
     close(shm_fd);
 
     if (p->image_data == MAP_FAILED) {
-        mp_msg(MSGT_VO, MSGL_FATAL,
-            "[vo_sharedbuffer] failed to map shared memory. "
-            "Error: %s\n", strerror(errno));
+        MP_FATAL(vo, "failed to map shared memory. Error: %s\n", strerror(errno));
         shm_unlink(p->buffer_name);
         goto err_out;
     }
@@ -180,11 +185,10 @@ static int config(struct vo *vo, uint32_t width, uint32_t height,
         [p->mposx_proto startWithWidth:p->image_width
                             withHeight:p->image_height
                              withBytes:p->image_bytespp
-                            withAspect:d_width*100/d_height];
+                            //withAspect:d_width*100/d_height];
+                            withAspect:p->image_width / p->image_height];
     } else {
-        mp_msg(MSGT_VO, MSGL_ERR,
-            "[vo_sharedbuffer] distributed object doesn't conform "
-            "to the correct protocol.\n");
+        MP_ERR(vo, "distributed object doesn't conform to the correct protocol.\n");
         [p->mposx_proxy release];
         p->mposx_proxy = nil;
         p->mposx_proto = nil;
@@ -194,12 +198,12 @@ static int config(struct vo *vo, uint32_t width, uint32_t height,
     return 0;
 err_out:
     [pool release];
-#endif
-    return 1;
+    return -1;
 }
 
 static int query_format(struct vo *vo, uint32_t format)
 {
+
     struct priv *p = vo->priv;
     unsigned int image_depth = 0;
     switch (format) {
@@ -244,6 +248,8 @@ static void uninit(struct vo *vo)
 
 static int control(struct vo *vo, uint32_t request, void *data)
 {
+    MP_INFO(vo, "control \n");
+
     struct priv *p = vo->priv;
 	/*
     switch (request) {
@@ -270,7 +276,7 @@ const struct vo_driver video_out_sharedbuffer = {
     .name = "sharedbuffer",
     .description = "Mac OS X Shared Buffer (headless video output for GUIs)",
     .preinit = preinit,
-    //.config = config,
+    .reconfig = reconfig,
     .control = control,
     .flip_page = flip_page,
     //.check_events = check_events,

@@ -106,8 +106,9 @@ static void draw_osd(struct vo *vo, struct osd_state *osd) {
 }
 */
 
-static void free_buffers(struct priv *p)
+static void free_buffers(struct vo *vo)
 {
+    struct priv *p = vo->priv;
     [p->mposx_proto stop];
     p->mposx_proto = nil;
     [p->mposx_proxy release];
@@ -115,12 +116,10 @@ static void free_buffers(struct priv *p)
 
     if (p->image_data) {
         if (munmap(p->image_data, image_bytes(p)) == -1) {
-            //mp_msg(MSGT_VO, MSGL_FATAL, "[vo_sharedbuffer] uninit: munmap "
-            //                            "failed. Error: %s\n", strerror(errno));
+            MP_FATAL(vo, "uninit: munmap failed. Error: %s\n", strerror(errno));
         }
         if (shm_unlink(p->buffer_name) == -1) {
-            //mp_msg(MSGT_VO, MSGL_FATAL, "[vo_sharedbuffer] uninit: shm_unlink "
-            //                            "failed. Error: %s\n", strerror(errno));
+            MP_FATAL(vo, "uninit: shm_unlink failed. Error: %s\n", strerror(errno));
         }
     }
 }
@@ -132,7 +131,7 @@ static int config(struct vo *vo, uint32_t width, uint32_t height,
 #if 0
     struct priv *p = vo->priv;
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    free_buffers(p);
+    free_buffers(vo);
 
     p->image_width = width;
     p->image_height = height;
@@ -237,7 +236,7 @@ supported:
 static void uninit(struct vo *vo)
 {
     struct priv *p = vo->priv;
-    free_buffers(p);
+    free_buffers(vo);
 }
 
 static int control(struct vo *vo, uint32_t request, void *data)

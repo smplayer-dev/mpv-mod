@@ -25,8 +25,6 @@
 #include "vo.h"
 #include "video/mp_image.h"
 #include "sub/osd.h"
-//#include "options/options.h"
-//#include "options/m_option.h"
 
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -35,20 +33,10 @@
 #include <unistd.h>
 
 // Shared memory
-#define DEFAULT_BUFFER_NAME "mpv"
 static int shm_fd = 0;
 
 // Image
 static unsigned char * image_data;
-
-static uint32_t image_width;
-static uint32_t image_height;
-static uint32_t image_bytes;
-static uint32_t image_stride;
-static uint32_t image_format;
-static uint32_t frame_count = 0;
-static uint32_t buffer_size = 0;
-static uint32_t video_buffer_size = 0;
 
 struct header_t {
 	uint32_t header_size;
@@ -67,13 +55,21 @@ struct header_t {
 
 struct priv {
 	char * buffer_name;
+	uint32_t image_width;
+	uint32_t image_height;
+	uint32_t image_bytes;
+	uint32_t image_stride;
+	uint32_t image_format;
+	uint32_t frame_count;
+	uint32_t buffer_size;
+	uint32_t video_buffer_size;
 };
 
 static void free_file_specific(struct vo *vo)
 {
 	struct priv * p = vo->priv;
 
-	if (munmap(header, buffer_size) == -1) {
+	if (munmap(header, p->buffer_size) == -1) {
 		MP_INFO(vo, "uninit: munmap failed. Error: %s\n", strerror(errno));
 	}
 
@@ -90,37 +86,37 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 
 	struct priv * p = vo->priv;
 
-	image_width = params->w;
-	image_height = params->h;
-	image_format = params->imgfmt;
+	p->image_width = params->w;
+	p->image_height = params->h;
+	p->image_format = params->imgfmt;
 
-	switch (image_format)
+	switch (p->image_format)
 	{
 		case IMGFMT_RGB24:
-			image_bytes = 3;
+			p->image_bytes = 3;
 			break;
 		case IMGFMT_RGB565:
-			image_bytes = 2;
+			p->image_bytes = 2;
 			break;
 		case IMGFMT_420P:
-			image_bytes = 1;
+			p->image_bytes = 1;
 			break;
 		case IMGFMT_NV12:
 		case IMGFMT_UYVY:
-			image_bytes = 2;
+			p->image_bytes = 2;
 			break;
 		default:
-			image_bytes = 3;
+			p->image_bytes = 3;
 	}
-	image_stride = image_width * image_bytes;
-	video_buffer_size = image_stride * image_height;
-	if (image_format == IMGFMT_420P) {
-		video_buffer_size = image_width * image_height * 2;
+	p->image_stride = p->image_width * p->image_bytes;
+	p->video_buffer_size = p->image_stride * p->image_height;
+	if (p->image_format == IMGFMT_420P) {
+		p->video_buffer_size = p->image_width * p->image_height * 2;
 	}
 
-	MP_INFO(vo, "w: %d h: %d format: %d\n", image_width, image_height, image_format);
-	MP_INFO(vo, "stride: %d bytes: %d\n", image_stride, image_bytes);
-	MP_INFO(vo, "video buffer size: %d\n", video_buffer_size);
+	MP_INFO(vo, "w: %d h: %d format: %d\n", p->image_width, p->image_height, p->image_format);
+	MP_INFO(vo, "stride: %d bytes: %d\n", p->image_stride, p->image_bytes);
+	MP_INFO(vo, "video buffer size: %d\n", p->video_buffer_size);
 
 	MP_INFO(vo, "writing output to a shared buffer named \"%s\"\n", p->buffer_name);
 
@@ -132,9 +128,9 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 		return -1;
 	}
 
-	buffer_size = sizeof(header) + video_buffer_size;
+	p->buffer_size = sizeof(header) + p->video_buffer_size;
 
-	if (ftruncate(shm_fd, buffer_size) == -1)
+	if (ftruncate(shm_fd, p->buffer_size) == -1)
 	{
 		MP_FATAL(vo, "failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
 		close(shm_fd);
@@ -142,7 +138,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 		return -1;
 	}
 
-	header = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+	header = mmap(NULL, p->buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 	close(shm_fd);
 
 	if (header == MAP_FAILED)
@@ -153,7 +149,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 	}
 
 	header->header_size = sizeof(struct header_t);
-	header->video_buffer_size = video_buffer_size;
+	header->video_buffer_size = p->video_buffer_size;
 
 	image_data = (unsigned char*) header + header->header_size;
 	MP_INFO(vo, "header: %p image_data: %p\n", header, image_data);
@@ -170,16 +166,18 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 		return;
 	}
 
-	header->width = image_width;
-	header->height = image_height;
-	header->bytes = image_bytes;
-	header->stride = image_stride;
+	struct priv * p = vo->priv;
+
+	header->width = p->image_width;
+	header->height = p->image_height;
+	header->bytes = p->image_bytes;
+	header->stride = p->image_stride;
 	header->planes = mpi->num_planes;
-	header->format = image_format;
-	header->frame_count = frame_count++;
+	header->format = p->image_format;
+	header->frame_count = p->frame_count++;
 	header->fps = mpi->nominal_fps;
 
-	switch (image_format) {
+	switch (p->image_format) {
 		case IMGFMT_420P: header->format = 808596553; break;
 		case IMGFMT_UYVY: header->format = 1498831189; break;
 		//case IMGFMT_NV12: header->format = 844715353; break;
@@ -193,17 +191,17 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 	//MP_INFO(vo, "w: %d h: %d stride: %d fps: %f \n", mpi->w, mpi->h, mpi->stride[0], mpi->nominal_fps);
 
 	header->busy = 1;
-	if (image_format == IMGFMT_420P) {
+	if (p->image_format == IMGFMT_420P) {
 		unsigned char * ptr = image_data;
-		int size = image_stride * image_height;
-		memcpy_pic(ptr, mpi->planes[0], image_width, image_height, image_stride, mpi->stride[0]);
+		int size = p->image_stride * p->image_height;
+		memcpy_pic(ptr, mpi->planes[0], p->image_width, p->image_height, p->image_stride, mpi->stride[0]);
 		ptr += size;
-		size = (image_width * image_height) / 2;
-		memcpy_pic(ptr, mpi->planes[1], image_width / 2, image_height / 2, image_width / 2, mpi->stride[1]);
+		size = (p->image_width * p->image_height) / 2;
+		memcpy_pic(ptr, mpi->planes[1], p->image_width / 2, p->image_height / 2, p->image_width / 2, mpi->stride[1]);
 		ptr += size;
-		memcpy_pic(ptr, mpi->planes[2], image_width / 2, image_height / 2, image_width / 2, mpi->stride[2]);
+		memcpy_pic(ptr, mpi->planes[2], p->image_width / 2, p->image_height / 2, p->image_width / 2, mpi->stride[2]);
 	} else {
-		memcpy_pic(image_data, mpi->planes[0], image_width * image_bytes, image_height, image_stride, mpi->stride[0]);
+		memcpy_pic(image_data, mpi->planes[0], p->image_width * p->image_bytes, p->image_height, p->image_stride, mpi->stride[0]);
 	}
 	header->busy = 0;
 }

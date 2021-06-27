@@ -75,9 +75,21 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
     struct priv *p = vo->priv;
 	struct mp_osd_res dim = osd_res_from_image_params(vo->params);
 	osd_draw_on_image(vo->osd, dim, mpi->pts, 0, mpi);
-    memcpy_pic(p->image_data, mpi->planes[0],
+
+	if (p->image_format == IMGFMT_420P) {
+		unsigned char * ptr = p->image_data;
+		int size = p->image_stride * p->image_height;
+		memcpy_pic(ptr, mpi->planes[0], p->image_width, p->image_height, p->image_stride, mpi->stride[0]);
+		ptr += size;
+		size = (p->image_width * p->image_height) / 2;
+		memcpy_pic(ptr, mpi->planes[1], p->image_width / 2, p->image_height / 2, p->image_width / 2, mpi->stride[1]);
+		ptr += size;
+		memcpy_pic(ptr, mpi->planes[2], p->image_width / 2, p->image_height / 2, p->image_width / 2, mpi->stride[2]);
+	} else {
+		memcpy_pic(p->image_data, mpi->planes[0],
                p->image_width * p->image_bytes, p->image_height,
                p->image_stride, mpi->stride[0]);
+	}
 }
 
 static void free_buffers(struct vo *vo)
@@ -130,6 +142,9 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 	}
 	p->image_stride = p->image_width * p->image_bytes;
 	p->buffer_size = p->image_stride * p->image_height;
+	if (p->image_format == IMGFMT_420P) {
+		p->buffer_size = p->image_width * p->image_height * 2;
+	}
 
     MP_INFO(vo, "writing output to a shared buffer named \"%s\"\n", p->buffer_name);
 
@@ -190,6 +205,7 @@ static int query_format(struct vo *vo, int format)
     //MP_INFO(vo, "query_format: %d \n", format);
 
     switch (format) {
+    case IMGFMT_420P:
     //case IMGFMT_YUY2:
     case IMGFMT_UYVY:
     case IMGFMT_RGB24:
@@ -216,7 +232,7 @@ static int control(struct vo *vo, uint32_t request, void *data)
 #define OPT_BASE_STRUCT struct priv
 
 const struct vo_driver video_out_sharedbuffer = {
-    .name = "cocoashm",
+    .name = "sharedbuffer",
     .description = "Mac OS X Shared Buffer (headless video output for GUIs)",
     .preinit = preinit,
     .reconfig = reconfig,
@@ -227,11 +243,11 @@ const struct vo_driver video_out_sharedbuffer = {
     .uninit = uninit,
     .priv_size = sizeof(struct priv),
     .options = (const struct m_option[]) {
-       {"buffer-name", OPT_STRING(buffer_name)},
+       {"name", OPT_STRING(buffer_name)},
        {0}
     },
     .priv_defaults = &(const struct priv) {
         .buffer_name = "mpv",
     },
-    .options_prefix = "cocoashm",
+    .options_prefix = "sharedbuffer",
 };

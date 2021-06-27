@@ -3,7 +3,7 @@ name: Build mpv on MacOS
 on: 
   workflow_dispatch:
   release:
-    types: [published]jobs:
+    types: [published]
 
 jobs:
   build:

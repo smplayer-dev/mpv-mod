@@ -217,13 +217,6 @@ static int preinit(struct vo *vo)
     MP_INFO(vo, "preinit \n");
 	struct priv * p = vo->priv;
 	MP_INFO(vo, "preinit: buffer_name: %s \n", p->buffer_name);
-	/*
-	if (p->buffer_name) {
-		buffer_name = strdup( p->buffer_name);
-	} else {
-		buffer_name = DEFAULT_BUFFER_NAME;
-	}
-	*/
     return 0;
 }
 

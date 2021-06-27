@@ -60,7 +60,7 @@ struct priv {
 	uint32_t video_buffer_size;
 };
 
-static void free_file_specific(struct vo *vo)
+static void free_buffers(struct vo *vo)
 {
 	struct priv * p = vo->priv;
 
@@ -77,7 +77,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 {
     MP_INFO(vo, "reconfig w: %d h: %d format: %d \n", params->w, params->h, params->imgfmt);
 
-	free_file_specific(vo);
+	free_buffers(vo);
 
 	struct priv * p = vo->priv;
 
@@ -209,7 +209,7 @@ static void flip_page(struct vo *vo)
 static void uninit(struct vo *vo)
 {
     MP_INFO(vo, "uninit \n");
-	free_file_specific(vo);
+	free_buffers(vo);
 }
 
 static int preinit(struct vo *vo)

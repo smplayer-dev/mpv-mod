@@ -27,10 +27,11 @@ jobs:
             #create-dmg --sandbox-safe --no-internet-enable --volname "mpv" --app-drop-link 200 185 mpv.dmg release
             #rm -rf release/mpv.app
             #mv mpv.dmg release/
+            tar -cjf mpv-bin.tar.bz2 release/
 
       - name: Create artifact
         #if: ${{ false }}
         uses: actions/upload-artifact@v2
         with:
-          name: mpv
-          path: ./release/*
+          name: mpv-bin.tar.bz2
+          path: ./mpv-bin.tar.bz2

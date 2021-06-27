@@ -32,12 +32,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-// Shared memory
-static int shm_fd = 0;
-
-// Image
-static unsigned char * image_data;
-
 struct header_t {
 	uint32_t header_size;
 	uint32_t video_buffer_size;
@@ -54,6 +48,7 @@ struct header_t {
 
 
 struct priv {
+	unsigned char * image_data;
 	char * buffer_name;
 	uint32_t image_width;
 	uint32_t image_height;
@@ -121,7 +116,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 	MP_INFO(vo, "writing output to a shared buffer named \"%s\"\n", p->buffer_name);
 
 	// Create shared memory
-	shm_fd = shm_open(p->buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+	int shm_fd = shm_open(p->buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 	if (shm_fd == -1)
 	{
 		MP_FATAL(vo, "failed to open shared memory. Error: %s\n", strerror(errno));
@@ -151,8 +146,8 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 	header->header_size = sizeof(struct header_t);
 	header->video_buffer_size = p->video_buffer_size;
 
-	image_data = (unsigned char*) header + header->header_size;
-	MP_INFO(vo, "header: %p image_data: %p\n", header, image_data);
+	p->image_data = (unsigned char*) header + header->header_size;
+	MP_INFO(vo, "header: %p image_data: %p\n", header, p->image_data);
 
     return 0;
 }
@@ -192,7 +187,7 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 
 	header->busy = 1;
 	if (p->image_format == IMGFMT_420P) {
-		unsigned char * ptr = image_data;
+		unsigned char * ptr = p->image_data;
 		int size = p->image_stride * p->image_height;
 		memcpy_pic(ptr, mpi->planes[0], p->image_width, p->image_height, p->image_stride, mpi->stride[0]);
 		ptr += size;
@@ -201,7 +196,7 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 		ptr += size;
 		memcpy_pic(ptr, mpi->planes[2], p->image_width / 2, p->image_height / 2, p->image_width / 2, mpi->stride[2]);
 	} else {
-		memcpy_pic(image_data, mpi->planes[0], p->image_width * p->image_bytes, p->image_height, p->image_stride, mpi->stride[0]);
+		memcpy_pic(p->image_data, mpi->planes[0], p->image_width * p->image_bytes, p->image_height, p->image_stride, mpi->stride[0]);
 	}
 	header->busy = 0;
 }

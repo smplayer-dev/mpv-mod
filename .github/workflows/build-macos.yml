@@ -1,6 +1,9 @@
 name: Build mpv on MacOS
 
-on: [workflow_dispatch]
+on: 
+  workflow_dispatch:
+  release:
+    types: [published]jobs:
 
 jobs:
   build:

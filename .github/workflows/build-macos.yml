@@ -36,3 +36,13 @@ jobs:
         with:
           name: mpv-bin.tar.bz2
           path: ./release/mpv-bin.tar.bz2
+
+      - name: Upload package to release
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./release/mpv-bin.tar.bz2
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true

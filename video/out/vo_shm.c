@@ -172,14 +172,6 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 	header->frame_count = p->frame_count++;
 	header->fps = mpi->nominal_fps;
 
-	switch (p->image_format) {
-		case IMGFMT_420P: header->format = 808596553; break;
-		case IMGFMT_UYVY: header->format = 1498831189; break;
-		//case IMGFMT_NV12: header->format = 844715353; break;
-		case IMGFMT_RGB24: header->format = 1380401688; break;
-		//case IMGFMT_RGB565: header->format = 1380401680 ; break;
-	}
-
 	struct mp_osd_res dim = osd_res_from_image_params(vo->params);
 	osd_draw_on_image(vo->osd, dim, mpi->pts, 0, mpi);
 

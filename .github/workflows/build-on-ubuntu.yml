@@ -29,7 +29,7 @@ jobs:
       - name: Install debian dir
         run: |
             git clone https://github.com/smplayer-dev/mpv-deb-packages.git deb
-            mv deb/debian debian
+            mv deb/debian mpv/debian
         
       - name: Add ffmpeg repository
         if: ${{ matrix.config.name == 'xenial' || matrix.config.name == 'bionic' }}
@@ -42,6 +42,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
+            cd mpv
             dch -b -v ${{ env.version }}-1~`lsb_release -cs` "Automatic build"
             mk-build-deps
             ls *.deb
@@ -50,8 +51,8 @@ jobs:
 
       - name: Prepare sources
         run: |
-            mkdir mpv/debian
-            cp -R debian/* mpv/debian
+            #mkdir mpv/debian
+            #cp -R debian/* mpv/debian
             cd mpv
             ./bootstrap.py
             

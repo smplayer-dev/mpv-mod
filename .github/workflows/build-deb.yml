@@ -28,7 +28,7 @@ jobs:
 
       - name: Install debian dir
         run: |
-            git clone smplayer-dev/mpv-deb-packages deb
+            git clone https://github.com/smplayer-dev/mpv-deb-packages.git deb
             mv deb/debian debian
         
       - name: Add ffmpeg repository

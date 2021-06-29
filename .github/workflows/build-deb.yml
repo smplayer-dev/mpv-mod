@@ -26,6 +26,11 @@ jobs:
         with:
           path: 'mpv'
 
+      - name: Install debian dir
+        run: |
+            git clone smplayer-dev/mpv-deb-packages deb
+            mv deb/debian debian
+        
       - name: Add ffmpeg repository
         if: ${{ matrix.config.name == 'xenial' || matrix.config.name == 'bionic' }}
         run: sudo add-apt-repository -y ppa:jonathonf/ffmpeg-4

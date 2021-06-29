@@ -23,7 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        path: 'mpv'
+        with:
+          path: 'mpv'
 
       - name: Add ffmpeg repository
         if: ${{ matrix.config.name == 'xenial' || matrix.config.name == 'bionic' }}

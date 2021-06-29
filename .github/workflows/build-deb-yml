@@ -1,0 +1,73 @@
+name: Build ubuntu packages
+env:
+  version: '0.33.1'
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: 'xenial', os: 'ubuntu-latest', container: 'wachii/ubuntu-qt:16.04' }
+          - { name: 'bionic', os: 'ubuntu-18.04', container: '' }
+          - { name: 'focal', os: 'ubuntu-20.04', container: '' }
+
+    runs-on: ${{ matrix.config.os }}
+    container: ${{ matrix.config.container }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        path: 'mpv'
+
+      - name: Add ffmpeg repository
+        if: ${{ matrix.config.name == 'xenial' || matrix.config.name == 'bionic' }}
+        run: sudo add-apt-repository -y ppa:jonathonf/ffmpeg-4
+  
+      - name: Install devscripts
+        run: |
+            sudo apt-get -y update
+            sudo apt-get -y install devscripts equivs
+
+      - name: Install build dependencies
+        run: |
+            dch -b -v ${{ env.version }}-1~`lsb_release -cs` "Automatic build"
+            mk-build-deps
+            ls *.deb
+            dpkg --info ./mpv-build-deps*.deb
+            sudo apt-get -y install ./mpv-build-deps*.deb --no-install-recommends
+
+      - name: Prepare sources
+        run: |
+            mkdir mpv/debian
+            cp -R debian/* mpv/debian
+            cd mpv
+            ./bootstrap.py
+            
+      - name: Build
+        run: |
+            cd mpv
+            fakeroot debian/rules build
+            fakeroot debian/rules binary
+            ls -l ../*.deb
+
+      - name: Create artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: mpv-${{ env.version }}-${{ matrix.config.name }}
+          path: ./*.deb
+
+      - name: Upload package to release
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./*.deb
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true

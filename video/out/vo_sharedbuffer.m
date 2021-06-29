@@ -90,6 +90,7 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
                p->image_width * p->image_bytes, p->image_height,
                p->image_stride, mpi->stride[0]);
 	}
+	talloc_free(mpi);
 }
 
 static void free_buffers(struct vo *vo)

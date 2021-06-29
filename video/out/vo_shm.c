@@ -191,6 +191,8 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
 		memcpy_pic(p->image_data, mpi->planes[0], p->image_width * p->image_bytes, p->image_height, p->image_stride, mpi->stride[0]);
 	}
 	header->busy = 0;
+
+	talloc_free(mpi);
 }
 
 static void flip_page(struct vo *vo)

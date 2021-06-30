@@ -73,24 +73,24 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
     //MP_INFO(vo, "draw_image \n");
 
     struct priv *p = vo->priv;
-	struct mp_osd_res dim = osd_res_from_image_params(vo->params);
-	osd_draw_on_image(vo->osd, dim, mpi->pts, 0, mpi);
+    struct mp_osd_res dim = osd_res_from_image_params(vo->params);
+    osd_draw_on_image(vo->osd, dim, mpi->pts, 0, mpi);
 
-	if (p->image_format == IMGFMT_420P) {
-		unsigned char * ptr = p->image_data;
-		int size = p->image_stride * p->image_height;
-		memcpy_pic(ptr, mpi->planes[0], p->image_width, p->image_height, p->image_stride, mpi->stride[0]);
-		ptr += size;
-		size = (p->image_width * p->image_height) / 2;
-		memcpy_pic(ptr, mpi->planes[1], p->image_width / 2, p->image_height / 2, p->image_width / 2, mpi->stride[1]);
-		ptr += size;
-		memcpy_pic(ptr, mpi->planes[2], p->image_width / 2, p->image_height / 2, p->image_width / 2, mpi->stride[2]);
-	} else {
-		memcpy_pic(p->image_data, mpi->planes[0],
+    if (p->image_format == IMGFMT_420P) {
+        unsigned char * ptr = p->image_data;
+        int size = p->image_stride * p->image_height;
+        memcpy_pic(ptr, mpi->planes[0], p->image_width, p->image_height, p->image_stride, mpi->stride[0]);
+        ptr += size;
+        size = (p->image_width * p->image_height) / 2;
+        memcpy_pic(ptr, mpi->planes[1], p->image_width / 2, p->image_height / 2, p->image_width / 2, mpi->stride[1]);
+        ptr += size;
+        memcpy_pic(ptr, mpi->planes[2], p->image_width / 2, p->image_height / 2, p->image_width / 2, mpi->stride[2]);
+    } else {
+        memcpy_pic(p->image_data, mpi->planes[0],
                p->image_width * p->image_bytes, p->image_height,
                p->image_stride, mpi->stride[0]);
-	}
-	talloc_free(mpi);
+    }
+    talloc_free(mpi);
 }
 
 static void free_buffers(struct vo *vo)
@@ -121,31 +121,31 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 
     p->image_width = params->w;
     p->image_height = params->h;
-	p->image_format = params->imgfmt;
+    p->image_format = params->imgfmt;
 
-	switch (p->image_format)
-	{
-		case IMGFMT_RGB24:
-			p->image_bytes = 3;
-			break;
-		case IMGFMT_RGB565:
-			p->image_bytes = 2;
-			break;
-		case IMGFMT_420P:
-			p->image_bytes = 1;
-			break;
-		case IMGFMT_NV12:
-		case IMGFMT_UYVY:
-			p->image_bytes = 2;
-			break;
-		default:
-			p->image_bytes = 3;
-	}
-	p->image_stride = p->image_width * p->image_bytes;
-	p->buffer_size = p->image_stride * p->image_height;
-	if (p->image_format == IMGFMT_420P) {
-		p->buffer_size = p->image_width * p->image_height * 2;
-	}
+    switch (p->image_format)
+    {
+        case IMGFMT_RGB24:
+            p->image_bytes = 3;
+            break;
+        case IMGFMT_RGB565:
+            p->image_bytes = 2;
+            break;
+        case IMGFMT_420P:
+            p->image_bytes = 1;
+            break;
+        case IMGFMT_NV12:
+        case IMGFMT_UYVY:
+            p->image_bytes = 2;
+            break;
+        default:
+            p->image_bytes = 3;
+    }
+    p->image_stride = p->image_width * p->image_bytes;
+    p->buffer_size = p->image_stride * p->image_height;
+    if (p->image_format == IMGFMT_420P) {
+        p->buffer_size = p->image_width * p->image_height * 2;
+    }
 
     MP_INFO(vo, "writing output to a shared buffer named \"%s\"\n", p->buffer_name);
 

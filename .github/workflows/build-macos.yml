@@ -14,8 +14,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: brew install yasm nasm pkg-config libass ffmpeg create-dmg
-        
+        run: |
+            brew install yasm nasm pkg-config libass ffmpeg create-dmg
+            brew install luajit --HEAD
+
       - name: Build
         run: |
             ./bootstrap.py

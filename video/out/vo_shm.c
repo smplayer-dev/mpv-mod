@@ -75,7 +75,10 @@ static void free_buffers(struct vo *vo)
 
 static int reconfig(struct vo *vo, struct mp_image_params *params)
 {
-    MP_INFO(vo, "reconfig w: %d h: %d format: %d \n", params->w, params->h, params->imgfmt);
+    MP_INFO(vo, "reconfig: w: %d h: %d format: %d \n", params->w, params->h, params->imgfmt);
+    MP_INFO(vo, "reconfig: color space: %d levels: %d primaries: %d gamma: %d light: %d\n",
+                 params->color.space, params->color.levels, params->color.primaries, params->color.gamma, params->color.light);
+    MP_INFO(vo, "reconfig: chroma_location: %d rotate: %d stereo3d: %d\n", params->chroma_location, params->rotate, params->stereo3d);
 
     free_buffers(vo);
 

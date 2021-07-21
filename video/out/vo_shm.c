@@ -38,7 +38,7 @@ struct header_t {
     uint32_t width;
     uint32_t height;
     uint32_t bytes;
-    uint32_t stride;
+    uint32_t stride[3];
     uint32_t planes;
     uint32_t format;
     uint32_t frame_count;
@@ -169,7 +169,13 @@ static void draw_image(struct vo *vo, mp_image_t *mpi)
     header->width = p->image_width;
     header->height = p->image_height;
     header->bytes = p->image_bytes;
-    header->stride = p->image_stride;
+    header->stride[0] = p->image_stride;
+    if (p->image_format == IMGFMT_420P) {
+        header->stride[1] = header->stride[2] = p->image_width / 2;
+    } else {
+        header->stride[1] = header->stride[2] = 0;
+    }
+
     header->planes = mpi->num_planes;
     header->format = p->image_format;
     header->frame_count = p->frame_count++;

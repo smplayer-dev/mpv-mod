@@ -44,6 +44,16 @@ struct header_t {
     uint32_t frame_count;
     uint32_t busy;
     float fps;
+    // MPV
+    int32_t rotate;
+    int32_t colorspace;
+    int32_t colorspace_levels;
+    int32_t colorspace_primaries;
+    int32_t colorspace_gamma;
+    int32_t colorspace_light;
+    float colorspace_sig_peak;
+    int32_t chroma_location;
+    uint32_t reserved[20];
 } * header;
 
 
@@ -151,6 +161,15 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
 
     p->image_data = (unsigned char*) header + header->header_size;
     MP_INFO(vo, "header: %p image_data: %p\n", header, p->image_data);
+
+    header->rotate = params->rotate;
+    header->colorspace = params->color.space;
+    header->colorspace_levels = params->color.levels;
+    header->colorspace_primaries = params->color.primaries;
+    header->colorspace_gamma = params->color.gamma;
+    header->colorspace_light = params->color.light;
+    header->colorspace_sig_peak = params->color.sig_peak;
+    header->chroma_location = params->chroma_location;
 
     return 0;
 }

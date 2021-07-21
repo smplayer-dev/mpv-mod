@@ -75,20 +75,22 @@ static void free_buffers(struct vo *vo)
     struct priv * p = vo->priv;
 
     if (munmap(header, p->buffer_size) == -1) {
-        MP_INFO(vo, "uninit: munmap failed. Error: %s\n", strerror(errno));
+        //MP_INFO(vo, "uninit: munmap failed. Error: %s\n", strerror(errno));
     }
 
     if (shm_unlink(p->buffer_name) == -1) {
-        MP_INFO(vo, "uninit: shm_unlink failed. Error: %s\n", strerror(errno));
+        //MP_INFO(vo, "uninit: shm_unlink failed. Error: %s\n", strerror(errno));
     }
 }
 
 static int reconfig(struct vo *vo, struct mp_image_params *params)
 {
     MP_INFO(vo, "reconfig: w: %d h: %d format: %d \n", params->w, params->h, params->imgfmt);
+    /*
     MP_INFO(vo, "reconfig: color space: %d levels: %d primaries: %d gamma: %d light: %d\n",
                  params->color.space, params->color.levels, params->color.primaries, params->color.gamma, params->color.light);
     MP_INFO(vo, "reconfig: chroma_location: %d rotate: %d stereo3d: %d\n", params->chroma_location, params->rotate, params->stereo3d);
+    */
 
     free_buffers(vo);
 
@@ -160,7 +162,7 @@ static int reconfig(struct vo *vo, struct mp_image_params *params)
     header->video_buffer_size = p->video_buffer_size;
 
     p->image_data = (unsigned char*) header + header->header_size;
-    MP_INFO(vo, "header: %p image_data: %p\n", header, p->image_data);
+    //MP_INFO(vo, "header: %p image_data: %p\n", header, p->image_data);
 
     header->rotate = params->rotate;
     header->colorspace = params->color.space;

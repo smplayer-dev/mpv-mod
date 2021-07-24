@@ -13,12 +13,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - uses: msys2/setup-msys2@v2
+  
       - name: Install dependencies
-        shell: bash
+        shell: msys2 {0}
         run: pacman -S $MINGW_PACKAGE_PREFIX-{ffmpeg,libjpeg-turbo,lua51} --noconfirm
 
       - name: Build
-        shell: bash
+        shell: msys2 {0}
         run: |
             ./bootstrap.py
             ./waf configure CC=gcc.exe --check-c-compiler=gcc --prefix=$MSYSTEM_PREFIX

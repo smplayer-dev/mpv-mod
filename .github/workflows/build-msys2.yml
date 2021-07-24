@@ -14,7 +14,11 @@ jobs:
         uses: actions/checkout@v2
 
       - uses: msys2/setup-msys2@v2
-  
+        with:
+          msystem: MINGW64
+          update: true
+          install: git mingw-w64-x86_64-toolchain
+
       - name: Install dependencies
         shell: msys2 {0}
         run: pacman -S $MINGW_PACKAGE_PREFIX-{ffmpeg,libjpeg-turbo,lua51} --noconfirm

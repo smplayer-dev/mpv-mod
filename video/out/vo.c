@@ -116,7 +116,9 @@ const struct vo_driver *const video_out_drivers[] =
 #if HAVE_COCOA
     &video_out_sharedbuffer,
 #endif
+#if HAVE_POSIX
     &video_out_shm,
+#endif
     NULL
 };
 

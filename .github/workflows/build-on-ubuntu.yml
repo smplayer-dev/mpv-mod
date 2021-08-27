@@ -39,6 +39,7 @@ jobs:
         run: |
             sudo apt-get -y update
             sudo apt-get -y install devscripts equivs
+            sudo apt-get -y upgrade
 
       - name: Install build dependencies
         run: |

@@ -27,7 +27,8 @@ jobs:
     - name: Checkout mpv-player/mpv
       uses: actions/checkout@v2
       with:
-        repository: 'mpv-player/mpv'
+        #repository: 'mpv-player/mpv'
+        repository: 'smplayer-dev/mpv-mod'
         fetch-depth: 0
 
     - name: Check upstream version

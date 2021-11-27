@@ -142,8 +142,8 @@ jobs:
         cp -r build/mpv.app release
 
     - name: Sanity check for back compatibility
-      if: ${{ false }}
-      #if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
+      #if: ${{ false }}
+      if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
       run: |
         cd build/mpv.app/Contents/MacOS/lib
         for l in *.dylib
@@ -153,7 +153,7 @@ jobs:
           count=`otool -l $l | grep -c minos` || :
           if [ $count -gt 0 ]; then
             echo 'find bad dylib. need to recompile it'
-            exit 1
+            #exit 1
           else
             echo 'ok'
           fi

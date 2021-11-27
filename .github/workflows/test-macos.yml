@@ -141,7 +141,8 @@ jobs:
         cp -r build/mpv.app release
 
     - name: Sanity check for back compatibility
-      if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
+      if: ${{ false }}
+      #if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
       run: |
         cd build/mpv.app/Contents/MacOS/lib
         for l in *.dylib
@@ -159,7 +160,7 @@ jobs:
         cd ..
 
     - name: Build Apple Disk Image
-      if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
+      #if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
       run: |
         brew install create-dmg
         create-dmg --sandbox-safe --no-internet-enable --volname "mpv" --app-drop-link 200 185 mpv.dmg release

@@ -51,6 +51,9 @@ jobs:
         echo "Install packages from source. ATTN: order matters"
         brew uninstall --ignore-dependencies --force openssl
         brew cleanup
+        
+        brew reinstall -s libxau
+        
         brew reinstall -s openssl@1.1
         brew reinstall -s lz4
         brew reinstall -s xz

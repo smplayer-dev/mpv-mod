@@ -134,7 +134,7 @@ jobs:
       run: |
         echo "Force brew install for 10.13"
         export MACOSX_DEPLOYMENT_TARGET="10.13"
-        for dependency in $(brew deps --include-build -n ffmpeg); do brew install --build-from-source $dependency; done
+        for dependency in $(brew deps --include-build -n ffmpeg); do brew reinstall --build-from-source $dependency; done
 
         
     - name: Build binary

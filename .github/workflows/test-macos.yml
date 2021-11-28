@@ -39,7 +39,8 @@ jobs:
         echo "::set-output name=build_hash::$(sh version.sh)"
 
     - name: Install dependencies
-      if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
+      if: ${{ false }}
+      #if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
       run: |
         echo "Force brew install for 10.13"
         export MACOSX_DEPLOYMENT_TARGET="10.13"
@@ -128,7 +129,14 @@ jobs:
       
         brew install -s ffmpeg
 
+    - name: Install dependencies
+      if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
+      run: |
+        echo "Force brew install for 10.13"
+        export MACOSX_DEPLOYMENT_TARGET="10.13"
+        for dependency in $(brew deps --include-build -n ffmpeg); do brew install --build-from-source $dependency; done
 
+        
     - name: Build binary
       id: build_binary
       if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}

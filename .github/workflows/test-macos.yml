@@ -47,9 +47,14 @@ jobs:
         brew update-reset
         brew update-reset
         path="$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula"
-        for dep in rav1e dav1d theora libunistring libtasn1 rtmpdump pcre p11-kit libogg speex tesseract xvid snappy rubberband libsamplerate libsndfile flac opus opencore-amr libvpx libvorbis libvidstab libsoxr frei0r aom srt leptonica webp lame glib openjpeg openssl@1.1 docutils ffmpeg jpeg libarchive libass little-cms2 luajit mujs pkg-config uchardet youtube-dl zimg ffmpeg sdl2 libb2 lz4 xz zstd libbluray libffi fontconfig freetype libpng fribidi giflib gmp gnutls libidn2 nettle graphite2 harfbuzz gettext libtiff little-cms2 x264 x265; do sed -i "" $'s/def install/def install\\\n    ENV["MACOSX_DEPLOYMENT_TARGET"] = "10.13"\\\n/' $path/$dep.rb;done
+        for dep in libxau jpeg-xl rotli rav1e dav1d theora libunistring libtasn1 rtmpdump pcre p11-kit libogg speex tesseract xvid snappy rubberband libsamplerate libsndfile flac opus opencore-amr libvpx libvorbis libvidstab libsoxr frei0r aom srt leptonica webp lame glib openjpeg openssl@1.1 docutils ffmpeg jpeg libarchive libass little-cms2 luajit mujs pkg-config uchardet youtube-dl zimg ffmpeg sdl2 libb2 lz4 xz zstd libbluray libffi fontconfig freetype libpng fribidi giflib gmp gnutls libidn2 nettle graphite2 harfbuzz gettext libtiff little-cms2 x264 x265; do sed -i "" $'s/def install/def install\\\n    ENV["MACOSX_DEPLOYMENT_TARGET"] = "10.13"\\\n/' $path/$dep.rb;done
         for dep in luajit python@3.8; do sed -i "" $'s/MacOS.version/"10.13"/' $path/$dep.rb;done
         echo "Install packages from source. ATTN: order matters"
+        
+        brew reinstall -s libxau
+        brew reinstall -s jpeg-xl
+        brew reinstall -s brotli
+        
         brew uninstall --ignore-dependencies --force openssl
         brew cleanup
         brew reinstall -s openssl@1.1
@@ -80,10 +85,10 @@ jobs:
         brew reinstall -s rtmpdump
         brew install -s sdl2
         brew install -s libb2
-        #brew install -s libbluray
-        #brew install -s fribidi
-        #brew install -s giflib
-        #brew install -s graphite2
+        brew install -s libbluray
+        brew install -s fribidi
+        brew install -s giflib
+        brew install -s graphite2
         brew install -s harfbuzz
         brew install -s x264
         brew install -s x265
@@ -116,28 +121,17 @@ jobs:
         brew install -s libvidstab
         brew install -s libsoxr
         brew install -s frei0r
-        #brew install -s aom
+        brew install -s aom
         brew install -s theora
         brew install -s dav1d
         brew install -s rav1e
         sudo chown -R `whoami`:admin /usr/local/share/texinfo
         
-        #brew reinstall -s libxau
-        #brew reinstall -s jpeg-xl
         #install_name_tool -change "@loader_path/libbrotlicommon.1.dylib" "/usr/local/opt/brotli/lib/libbrotlicommon.1.dylib" /usr/local/opt/brotli/lib/libbrotlidec.1.dylib
         #install_name_tool -change "@loader_path/libbrotlicommon.1.dylib" "/usr/local/opt/brotli/lib/libbrotlicommon.1.dylib" /usr/local/opt/brotli/lib/libbrotlienc.1.dylib
       
         brew install -s ffmpeg
 
-    - name: Install dependencies
-      if: ${{ false }}
-      #if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
-      run: |
-        echo "Force brew install for 10.13"
-        export MACOSX_DEPLOYMENT_TARGET="10.13"
-        for dependency in $(brew deps --include-build -n ffmpeg); do brew reinstall --build-from-source $dependency; done
-
-        
     - name: Build binary
       id: build_binary
       if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}

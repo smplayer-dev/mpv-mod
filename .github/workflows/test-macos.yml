@@ -39,8 +39,8 @@ jobs:
         echo "::set-output name=build_hash::$(sh version.sh)"
 
     - name: Install dependencies
-      if: ${{ false }}
-      #if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
+      #if: ${{ false }}
+      if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
       run: |
         echo "Force brew install for 10.13"
         export MACOSX_DEPLOYMENT_TARGET="10.13"
@@ -52,6 +52,9 @@ jobs:
         echo "Install packages from source. ATTN: order matters"
         brew uninstall --ignore-dependencies --force openssl
         brew cleanup
+
+        brew reinstall -s https://raw.githubusercontent.com/Homebrew/homebrew-core/15079c01d354addb3a60902d0c52ffaa1046972a/Formula/aom.rb
+
         brew reinstall -s openssl@1.1
         brew reinstall -s lz4
         brew reinstall -s xz
@@ -122,15 +125,16 @@ jobs:
         brew install -s rav1e
         sudo chown -R `whoami`:admin /usr/local/share/texinfo
         
-        brew reinstall -s libxau
-        brew reinstall -s jpeg-xl
-        install_name_tool -change "@loader_path/libbrotlicommon.1.dylib" "/usr/local/opt/brotli/lib/libbrotlicommon.1.dylib" /usr/local/opt/brotli/lib/libbrotlidec.1.dylib
-        install_name_tool -change "@loader_path/libbrotlicommon.1.dylib" "/usr/local/opt/brotli/lib/libbrotlicommon.1.dylib" /usr/local/opt/brotli/lib/libbrotlienc.1.dylib
+        #brew reinstall -s libxau
+        #brew reinstall -s jpeg-xl
+        #install_name_tool -change "@loader_path/libbrotlicommon.1.dylib" "/usr/local/opt/brotli/lib/libbrotlicommon.1.dylib" /usr/local/opt/brotli/lib/libbrotlidec.1.dylib
+        #install_name_tool -change "@loader_path/libbrotlicommon.1.dylib" "/usr/local/opt/brotli/lib/libbrotlicommon.1.dylib" /usr/local/opt/brotli/lib/libbrotlienc.1.dylib
       
         brew install -s ffmpeg
 
     - name: Install dependencies
-      if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
+      if: ${{ false }}
+      #if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
       run: |
         echo "Force brew install for 10.13"
         export MACOSX_DEPLOYMENT_TARGET="10.13"

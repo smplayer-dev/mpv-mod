@@ -44,6 +44,7 @@ jobs:
       run: |
         echo "Force brew install for 10.13"
         export MACOSX_DEPLOYMENT_TARGET="10.13"
+        export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
         brew update
         brew update-reset
         path="$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula"
@@ -52,9 +53,9 @@ jobs:
         for dep in luajit python@3.8; do sed -i "" $'s/MacOS.version/"10.13"/' $path/$dep.rb;done
         echo "Install packages from source. ATTN: order matters"
 
-        brew install -s libxdmcp
-        brew install -s cjson
-        brew install -s libsodium
+        brew reinstall -s libxdmcp
+        brew reinstall -s cjson
+        brew reinstall -s libsodium
 
         brew reinstall -s libxau
         brew reinstall -s jpeg-xl

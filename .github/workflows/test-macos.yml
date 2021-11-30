@@ -52,9 +52,9 @@ jobs:
         for dep in luajit python@3.8; do sed -i "" $'s/MacOS.version/"10.13"/' $path/$dep.rb;done
         echo "Install packages from source. ATTN: order matters"
 
+        brew reinstall -s mbedtls
         brew reinstall -s libxdmcp
         brew reinstall -s cjson
-        brew reinstall -s mbedtls
         brew reinstall -s librist
         brew reinstall -s libsodium
 

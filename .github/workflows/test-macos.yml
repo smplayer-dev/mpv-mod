@@ -4,8 +4,7 @@ on: [workflow_dispatch]
 
 jobs:
   build:
-    #runs-on: macos-10.15
-    runs-on: macos-11
+    runs-on: macos-10.15
     env:
       CC: clang
       CXX: clang++
@@ -53,9 +52,9 @@ jobs:
         for dep in luajit python@3.8; do sed -i "" $'s/MacOS.version/"10.13"/' $path/$dep.rb;done
         echo "Install packages from source. ATTN: order matters"
 
-        brew reinstall -s libxdmcp
-        brew reinstall -s cjson
-        brew reinstall -s libsodium
+        brew install -s libxdmcp
+        brew install -s cjson
+        brew install -s libsodium
 
         brew reinstall -s libxau
         brew reinstall -s jpeg-xl

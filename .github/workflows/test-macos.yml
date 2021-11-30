@@ -129,7 +129,7 @@ jobs:
         brew install -s rubberband
         brew reinstall -s opus
         brew install -s opencore-amr
-        brew install -s libvpx
+        #brew install -s libvpx
         brew install -s libvidstab
         brew install -s libsoxr
         brew install -s frei0r

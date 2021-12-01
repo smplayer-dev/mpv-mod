@@ -48,11 +48,13 @@ jobs:
         brew update
         brew update-reset
         path="$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula"
+        wget https://github.com/Homebrew/homebrew-core/raw/7820305e7f2c8e0036c6011f1f17978c15dcb4ec/Formula/libvpx.rb -O $path/libvpx.rb
         for dep in rav1e dav1d theora libunistring libtasn1 rtmpdump pcre p11-kit libogg speex tesseract xvid snappy rubberband libsamplerate libsndfile flac opus opencore-amr libvpx libvorbis libvidstab libsoxr frei0r aom srt leptonica webp lame glib openjpeg openssl@1.1 docutils ffmpeg jpeg libarchive libass little-cms2 luajit mujs pkg-config uchardet youtube-dl zimg ffmpeg sdl2 libb2 lz4 xz zstd libbluray libffi fontconfig freetype libpng fribidi giflib gmp gnutls libidn2 nettle graphite2 harfbuzz gettext libtiff little-cms2 x264 x265; do sed -i "" $'s/def install/def install\\\n    ENV["MACOSX_DEPLOYMENT_TARGET"] = "10.13"\\\n/' $path/$dep.rb;done
         for dep in libxau jpeg-xl brotli mbedtls libvmaf libxcb zeromq libxdmcp cjson librist libsodium; do sed -i "" $'s/def install/def install\\\n    ENV["MACOSX_DEPLOYMENT_TARGET"] = "10.13"\\\n/' $path/$dep.rb;done
         for dep in luajit python@3.8; do sed -i "" $'s/MacOS.version/"10.13"/' $path/$dep.rb;done
         echo "Install packages from source. ATTN: order matters"
 
+        cat $path/libvpx.rb
         brew reinstall -s libxdmcp
         brew reinstall -s cjson
         brew reinstall -s libsodium

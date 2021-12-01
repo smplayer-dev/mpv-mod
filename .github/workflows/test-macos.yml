@@ -45,13 +45,13 @@ jobs:
         echo "Force brew install for 10.13"
         export MACOSX_DEPLOYMENT_TARGET="10.13"
         export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-        brew update
-        brew update-reset
+        brew update-reset && brew update
         path="$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula"
-        wget https://raw.githubusercontent.com/Homebrew/homebrew-core/a9ecdb76c758861afda1713894742f4bf365db62/Formula/libvpx.rb -O $path/libvpx.rb
+        #wget https://raw.githubusercontent.com/Homebrew/homebrew-core/a9ecdb76c758861afda1713894742f4bf365db62/Formula/libvpx.rb -O $path/libvpx.rb
         for dep in rav1e dav1d theora libunistring libtasn1 rtmpdump pcre p11-kit libogg speex tesseract xvid snappy rubberband libsamplerate libsndfile flac opus opencore-amr libvpx libvorbis libvidstab libsoxr frei0r aom srt leptonica webp lame glib openjpeg openssl@1.1 docutils ffmpeg jpeg libarchive libass little-cms2 luajit mujs pkg-config uchardet youtube-dl zimg ffmpeg sdl2 libb2 lz4 xz zstd libbluray libffi fontconfig freetype libpng fribidi giflib gmp gnutls libidn2 nettle graphite2 harfbuzz gettext libtiff little-cms2 x264 x265; do sed -i "" $'s/def install/def install\\\n    ENV["MACOSX_DEPLOYMENT_TARGET"] = "10.13"\\\n/' $path/$dep.rb;done
         for dep in libxau jpeg-xl brotli mbedtls libvmaf libxcb zeromq libxdmcp cjson librist libsodium; do sed -i "" $'s/def install/def install\\\n    ENV["MACOSX_DEPLOYMENT_TARGET"] = "10.13"\\\n/' $path/$dep.rb;done
         for dep in luajit python@3.8; do sed -i "" $'s/MacOS.version/"10.13"/' $path/$dep.rb;done
+        sed -i "" $'s/enable-shared/disable-shared/' $path/libvpx.rb
         echo "Install packages from source. ATTN: order matters"
 
         cat $path/libvpx.rb

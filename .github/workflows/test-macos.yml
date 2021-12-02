@@ -38,13 +38,9 @@ jobs:
         sed -i .bak 's/--dirty//g' version.sh
         echo "::set-output name=build_hash::$(sh version.sh)"
 
-    - name: Install dependencies
-      #if: ${{ false }}
+    - name: Patch formulas
       if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
       run: |
-        echo "Force brew install for 10.13"
-        export MACOSX_DEPLOYMENT_TARGET="10.13"
-        export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
         brew update-reset && brew update
         path="$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula"
         #wget https://raw.githubusercontent.com/Homebrew/homebrew-core/a9ecdb76c758861afda1713894742f4bf365db62/Formula/libvpx.rb -O $path/libvpx.rb
@@ -52,13 +48,20 @@ jobs:
         for dep in libxau jpeg-xl brotli mbedtls libvmaf libxcb zeromq libxdmcp cjson librist libsodium; do sed -i "" $'s/def install/def install\\\n    ENV["MACOSX_DEPLOYMENT_TARGET"] = "10.13"\\\n/' $path/$dep.rb;done
         for dep in luajit python@3.8; do sed -i "" $'s/MacOS.version/"10.13"/' $path/$dep.rb;done
         sed -i "" $'s/enable-shared/disable-shared/' $path/libvpx.rb
+        cat $path/libvpx.rb
+
+    - name: Install dependencies
+      if: ${{ success() && steps.upstream_tag.outputs.build_hash != steps.git_tag.outputs.tag }}
+      run: |
+        echo "Force brew install for 10.13"
+        export MACOSX_DEPLOYMENT_TARGET="10.13"
+        export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
         echo "Install packages from source. ATTN: order matters"
 
-        cat $path/libvpx.rb
         brew reinstall -s libxdmcp
         brew reinstall -s cjson
         brew reinstall -s libsodium
-        brew reinstall -s libvpx
+        #brew reinstall -s libvpx
 
         brew reinstall -s libxau
         brew reinstall -s jpeg-xl
@@ -135,7 +138,7 @@ jobs:
         brew install -s rubberband
         brew reinstall -s opus
         brew install -s opencore-amr
-        #brew install -s libvpx
+        brew install -s libvpx
         brew install -s libvidstab
         brew install -s libsoxr
         brew install -s frei0r
